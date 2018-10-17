@@ -1,10 +1,7 @@
 {
-    "name": "yiisoft/yii2-dev",
+    "name": "frammirabile/yii2",
     "description": "Yii PHP Framework Version 2 - Development Package",
-    "keywords": [
-        "yii2",
-        "framework"
-    ],
+    "keywords": ["yii2", "framework"],
     "homepage": "http://www.yiiframework.com/",
     "type": "yii2-extension",
     "license": "BSD-3-Clause",
@@ -53,6 +50,11 @@
             "email": "info@dynasource.eu",
             "homepage": "http://dynasource.eu",
             "role": "Core framework development"
+        },
+        {
+            "name": "Francesco Ammirabile",
+            "email": "frammirabile@gmail.com",
+            "role": "Core framework development"
         }
     ],
     "support": {
@@ -64,11 +66,9 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "replace": {
-        "yiisoft/yii2": "self.version"
-    },
+    "replace": {"yiisoft/yii2": "self.version"},
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=7.2.0",
         "ext-mbstring": "*",
         "ext-ctype": "*",
         "lib-pcre": "*",
@@ -92,9 +92,7 @@
             "url": "https://asset-packagist.org"
         }
     ],
-    "suggest": {
-        "yiisoft/yii2-coding-standards": "you can use this package to check for code style issues when contributing to yii"
-    },
+    "suggest": {"yiisoft/yii2-coding-standards": "you can use this package to check for code style issues when contributing to yii"},
     "autoload": {
         "psr-4": {
             "yii\\": "framework/",
@@ -102,11 +100,9 @@
         }
     },
     "config": {
-        "platform": {"php": "5.4"}
+        "platform": {"php": "7.2"}
     },
-    "bin": [
-        "framework/yii"
-    ],
+    "bin": ["framework/yii"],
     "extra": {
         "branch-alias": {
             "dev-master": "2.0.x-dev"
