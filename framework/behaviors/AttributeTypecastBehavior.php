@@ -9,11 +9,18 @@ namespace yii\behaviors;
 
 use yii\base\Behavior;
 use yii\base\InvalidArgumentException;
+use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\BaseActiveRecord;
+use yii\db\JsonExpression;
+use yii\helpers\Json;
 use yii\helpers\StringHelper;
 use yii\validators\BooleanValidator;
+use yii\validators\DateValidator;
+use yii\validators\EachValidator;
+use yii\validators\JsonValidator;
 use yii\validators\NumberValidator;
+use yii\validators\RangeValidator;
 use yii\validators\StringValidator;
 
 /**
@@ -111,10 +118,15 @@ use yii\validators\StringValidator;
  */
 class AttributeTypecastBehavior extends Behavior
 {
-    const TYPE_INTEGER = 'integer';
-    const TYPE_FLOAT = 'float';
+    const TYPE_ARRAY = 'array';
     const TYPE_BOOLEAN = 'boolean';
+    const TYPE_DATE = 'date';
+    const TYPE_DATETIME = 'datetime';
+    const TYPE_FLOAT = 'float';
+    const TYPE_INTEGER = 'integer';
+    const TYPE_JSON = 'json';
     const TYPE_STRING = 'string';
+    const TYPE_TIME = 'time';
 
     /**
      * @var Model|BaseActiveRecord the owner of this behavior.
@@ -145,14 +157,20 @@ class AttributeTypecastBehavior extends Behavior
      * If enabled attribute value which equals to `null` will not be type-casted (e.g. `null` remains `null`),
      * otherwise it will be converted according to the type configured at [[attributeTypes]].
      */
-    public $skipOnNull = true;
+    public $skipOnNull = false;
+    /**
+     * @var bool whether to skip typecasting of array `null` values.
+     * If enabled array value which equals to `null` will not be type-casted (e.g. `null` remains `null`),
+     * otherwise it will be converted into an empty array.
+     */
+    public $skipOnArrayNull = false;
     /**
      * @var bool whether to perform typecasting after owner model validation.
      * Note that typecasting will be performed only if validation was successful, e.g.
      * owner model has no errors.
      * Note that changing this option value will have no effect after this behavior has been attached to the model.
      */
-    public $typecastAfterValidate = true;
+    public $typecastAfterValidate = false;
     /**
      * @var bool whether to perform typecasting before saving owner model (insert or update).
      * This option may be disabled in order to achieve better performance.
@@ -160,7 +178,7 @@ class AttributeTypecastBehavior extends Behavior
      * will grant no benefit an thus can be disabled.
      * Note that changing this option value will have no effect after this behavior has been attached to the model.
      */
-    public $typecastBeforeSave = false;
+    public $typecastBeforeSave = true;
     /**
      * @var bool whether to perform typecasting after saving owner model (insert or update).
      * This option may be disabled in order to achieve better performance.
@@ -169,7 +187,7 @@ class AttributeTypecastBehavior extends Behavior
      * Note that changing this option value will have no effect after this behavior has been attached to the model.
      * @since 2.0.14
      */
-    public $typecastAfterSave = false;
+    public $typecastAfterSave = true;
     /**
      * @var bool whether to perform typecasting after retrieving owner model data from
      * the database (after find or refresh).
@@ -178,7 +196,7 @@ class AttributeTypecastBehavior extends Behavior
      * will grant no benefit in most cases an thus can be disabled.
      * Note that changing this option value will have no effect after this behavior has been attached to the model.
      */
-    public $typecastAfterFind = false;
+    public $typecastAfterFind = true;
 
     /**
      * @var array internal static cache for auto detected [[attributeTypes]] values
@@ -217,8 +235,9 @@ class AttributeTypecastBehavior extends Behavior
      * @param array $attributeNames list of attribute names that should be type-casted.
      * If this parameter is empty, it means any attribute listed in the [[attributeTypes]]
      * should be type-casted.
+     * @param null|callable $callback callback for type-casting attributes.
      */
-    public function typecastAttributes($attributeNames = null)
+    public function typecastAttributes($attributeNames = null, ?callable $callback = null)
     {
         $attributeTypes = [];
 
@@ -235,10 +254,16 @@ class AttributeTypecastBehavior extends Behavior
 
         foreach ($attributeTypes as $attribute => $type) {
             $value = $this->owner->{$attribute};
-            if ($this->skipOnNull && $value === null) {
-                continue;
+            if ($value === null) {
+                if ($this->skipOnNull)
+                    continue;
+
+                if ($type == self::TYPE_ARRAY && !$this->skipOnArrayNull) {
+                    $this->owner->{$attribute} = [];
+                    continue;
+                }
             }
-            $this->owner->{$attribute} = $this->typecastValue($value, $type);
+            $this->owner->{$attribute} = call_user_func_array($callback ?: [$this, 'typecastValue'], [$value, $type]);
         }
     }
 
@@ -247,6 +272,7 @@ class AttributeTypecastBehavior extends Behavior
      * @param mixed $value value to be type-casted.
      * @param string|callable $type type name or typecast callable.
      * @return mixed typecast result.
+     * @throws InvalidConfigException
      */
     protected function typecastValue($value, $type)
     {
@@ -256,23 +282,66 @@ class AttributeTypecastBehavior extends Behavior
             }
 
             switch ($type) {
-                case self::TYPE_INTEGER:
-                    return (int) $value;
-                case self::TYPE_FLOAT:
-                    return (float) $value;
+                case self::TYPE_ARRAY:
+                    return is_string($value) ? StringHelper::explode($value, ',', function($value) { return is_numeric($value) ? floatval($value) : $value; }) : $value;
                 case self::TYPE_BOOLEAN:
                     return (bool) $value;
+                case self::TYPE_DATE:
+                    return \Yii::$app->formatter->asDate($value);
+                case self::TYPE_DATETIME:
+                    return \Yii::$app->formatter->asDatetime($value);
+                case self::TYPE_FLOAT:
+                    return (float) $value;
+                case self::TYPE_INTEGER:
+                    return (int) $value;
+                case self::TYPE_JSON:
+                    if (!is_string($value)) {
+                        $value = Json::encode($value);
+                    }
+                    return Json::decode($value, false);
                 case self::TYPE_STRING:
                     if (is_float($value)) {
                         return StringHelper::floatToString($value);
                     }
                     return (string) $value;
+                case self::TYPE_TIME:
+                    return \Yii::$app->formatter->asTime($value);
                 default:
                     throw new InvalidArgumentException("Unsupported type '{$type}'");
             }
         }
 
         return call_user_func($type, $value);
+    }
+
+    /**
+     * Casts the given value to be saved to the specified type.
+     * @param mixed $value value to be type-casted.
+     * @param string $type type name.
+     * @return mixed typecast result.
+     */
+    protected function typecastValueBeforeSave(string $value, $type)
+    {
+        if (empty($value) && $type != self::TYPE_BOOLEAN)
+            return null;
+
+        switch ($type) {
+            case self::TYPE_ARRAY:
+                return is_array($value) ? implode(',', $value) : $value;
+            case self::TYPE_BOOLEAN:
+                return (int) $value;
+            case self::TYPE_JSON:
+                return is_string($value) ? $value : new JsonExpression($value);
+            case self::TYPE_DATE:
+            case self::TYPE_DATETIME:
+            case self::TYPE_FLOAT:
+            case self::TYPE_INTEGER:
+            case self::TYPE_STRING:
+            case self::TYPE_TIME:
+                return $value;
+            default:
+                throw new InvalidArgumentException("Unsupported type '{$type}'");
+        }
     }
 
     /**
@@ -284,12 +353,18 @@ class AttributeTypecastBehavior extends Behavior
         $attributeTypes = [];
         foreach ($this->owner->getValidators() as $validator) {
             $type = null;
-            if ($validator instanceof BooleanValidator) {
+            if ($validator instanceof EachValidator || $validator instanceof RangeValidator && $validator->allowArray) {
+                $type = self::TYPE_ARRAY;
+            } elseif ($validator instanceof BooleanValidator) {
                 $type = self::TYPE_BOOLEAN;
             } elseif ($validator instanceof NumberValidator) {
                 $type = $validator->integerOnly ? self::TYPE_INTEGER : self::TYPE_FLOAT;
+            } elseif ($validator instanceof JsonValidator) {
+                $type = self::TYPE_JSON;
             } elseif ($validator instanceof StringValidator) {
                 $type = self::TYPE_STRING;
+            } elseif ($validator instanceof DateValidator) {
+                $type = $validator->type;
             }
 
             if ($type !== null) {
@@ -344,9 +419,9 @@ class AttributeTypecastBehavior extends Behavior
      */
     public function beforeSave($event)
     {
-        $this->typecastAttributes();
+        $this->typecastAttributes(null, [$this, 'typecastValueBeforeSave']);
     }
-    
+
     /**
      * Handles owner 'afterInsert' and 'afterUpdate' events, ensuring attribute typecasting.
      * @param \yii\base\Event $event event instance.
