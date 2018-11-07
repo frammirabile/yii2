@@ -7,6 +7,8 @@
 
 namespace yii\helpers;
 
+use yii\base\InvalidConfigException;
+
 /**
  * FormatConverter provides functionality to convert between different formatting pattern formats.
  *
@@ -15,7 +17,49 @@ namespace yii\helpers;
  * @author Carsten Brandt <mail@cebe.cc>
  * @author Enrica Ruedin <e.ruedin@guggach.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class FormatConverter extends BaseFormatConverter
 {
+    /**
+     * @param string $value
+     * @return string
+     * @throws InvalidConfigException
+     */
+    public static function asDate(string $value): string
+    {
+        return \Yii::$app->formatter->asDate($value);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     * @throws InvalidConfigException
+     */
+    public static function asDateTime(string $value): string
+    {
+        return \Yii::$app->formatter->asDateTime($value);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     * @throws InvalidConfigException
+     */
+    public static function asTime(string $value): string
+    {
+        return \Yii::$app->formatter->asTime($value);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     * @throws InvalidConfigException
+     */
+    public static function asCurrency(string $value): string
+    {
+        return \Yii::$app->formatter->asCurrency($value);
+    }
 }

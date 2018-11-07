@@ -7,7 +7,8 @@
 
 namespace yii\rest;
 
-use Yii;
+use yii\db\ActiveRecordInterface;
+use yii\web\NotFoundHttpException;
 
 /**
  * ViewAction implements the API endpoint for returning the detailed information about a model.
@@ -20,16 +21,18 @@ use Yii;
 class ViewAction extends Action
 {
     /**
-     * Displays a model.
-     * @param string $id the primary key of the model.
-     * @return \yii\db\ActiveRecordInterface the model being displayed
+     * Displays a model
+     *
+     * @param string $id the primary key of the model
+     * @return ActiveRecordInterface the model being displayed
+     * @throws NotFoundHttpException
      */
-    public function run($id)
+    public function run(string $id): ActiveRecordInterface
     {
         $model = $this->findModel($id);
-        if ($this->checkAccess) {
+
+        if ($this->checkAccess)
             call_user_func($this->checkAccess, $this->id, $model);
-        }
 
         return $model;
     }

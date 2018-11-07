@@ -1,8 +1,7 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @link https://github.com/frammirabile/yii2
+ * @copyright Copyright (c) 2018 Francesco Ammirabile <frammirabile@gmail.com>
  */
 
 namespace yii\helpers;
@@ -12,9 +11,18 @@ namespace yii\helpers;
  *
  * For more details and usage information on Url, see the [guide article on url helpers](guide:helper-url).
  *
- * @author Alexander Makarov <sam@rmcreative.ru>
- * @since 2.0
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class Url extends BaseUrl
 {
+    /**
+     * Returns the domain
+     *
+     * @return string
+     */
+    public static function domain(): string
+    {
+        return preg_replace('/.*\.(.+\..+)/', '$1', parent::base(true));
+    }
 }

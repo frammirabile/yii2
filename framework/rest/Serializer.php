@@ -8,15 +8,10 @@
 namespace yii\rest;
 
 use Yii;
-use yii\base\Arrayable;
-use yii\base\Component;
-use yii\base\Model;
-use yii\data\DataProviderInterface;
-use yii\data\Pagination;
-use yii\helpers\ArrayHelper;
-use yii\web\Link;
-use yii\web\Request;
-use yii\web\Response;
+use yii\base\{Arrayable, Component, InvalidConfigException, Model};
+use yii\data\{DataProviderInterface, Pagination};
+use yii\helpers\{ArrayHelper, Inflector};
+use yii\web\{Link, Request, Response};
 
 /**
  * Serializer converts resource objects and collections into array representation.
@@ -29,6 +24,9 @@ use yii\web\Response;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class Serializer extends Component
 {
@@ -38,31 +36,37 @@ class Serializer extends Component
      * by [[Model::fields()]] will be returned.
      */
     public $fieldsParam = 'fields';
+
     /**
      * @var string the name of the query parameter containing the information about which fields should be returned
      * in addition to those listed in [[fieldsParam]] for a resource object.
      */
     public $expandParam = 'expand';
+
     /**
      * @var string the name of the HTTP header containing the information about total number of data items.
      * This is used when serving a resource collection with pagination.
      */
     public $totalCountHeader = 'X-Pagination-Total-Count';
+
     /**
      * @var string the name of the HTTP header containing the information about total number of pages of data.
      * This is used when serving a resource collection with pagination.
      */
     public $pageCountHeader = 'X-Pagination-Page-Count';
+
     /**
      * @var string the name of the HTTP header containing the information about the current page number (1-based).
      * This is used when serving a resource collection with pagination.
      */
     public $currentPageHeader = 'X-Pagination-Current-Page';
+
     /**
      * @var string the name of the HTTP header containing the information about the number of data items in each page.
      * This is used when serving a resource collection with pagination.
      */
     public $perPageHeader = 'X-Pagination-Per-Page';
+
     /**
      * @var string the name of the envelope (e.g. `items`) for returning the resource objects in a collection.
      * This is used when serving a resource collection. When this is set and pagination is enabled, the serializer
@@ -89,26 +93,31 @@ class Serializer extends Component
      * The pagination information as shown in `_links` and `_meta` can be accessed from the response HTTP headers.
      */
     public $collectionEnvelope;
+
     /**
      * @var string the name of the envelope (e.g. `_links`) for returning the links objects.
      * It takes effect only, if `collectionEnvelope` is set.
      * @since 2.0.4
      */
     public $linksEnvelope = '_links';
+
     /**
      * @var string the name of the envelope (e.g. `_meta`) for returning the pagination object.
      * It takes effect only, if `collectionEnvelope` is set.
      * @since 2.0.4
      */
     public $metaEnvelope = '_meta';
+
     /**
      * @var Request the current request. If not set, the `request` application component will be used.
      */
     public $request;
+
     /**
      * @var Response the response to be sent. If not set, the `response` application component will be used.
      */
     public $response;
+
     /**
      * @var bool whether to preserve array keys when serializing collection data.
      * Set this to `true` to allow serialization of a collection as a JSON object where array keys are
@@ -119,11 +128,23 @@ class Serializer extends Component
      */
     public $preserveKeys = false;
 
+    /**
+     * @var bool whether to variablize keys
+     */
+    public $variablizeKeys = true;
+
+    /**
+     * @var array|null replacement in array keys
+     */
+    public $keysReplacement = ['/_id$/' => ''];
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
+     * @throws InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
         if ($this->request === null) {
             $this->request = Yii::$app->getRequest();
@@ -139,17 +160,32 @@ class Serializer extends Component
      * It will not do conversion for unknown object types or non-object data.
      * The default implementation will handle [[Model]] and [[DataProviderInterface]].
      * You may override this method to support more object types.
-     * @param mixed $data the data to be serialized.
-     * @return mixed the converted data.
+     *
+     * @param mixed $data the data to be serialized
+     * @return mixed the converted data
      */
     public function serialize($data)
     {
-        if ($data instanceof Model && $data->hasErrors()) {
+        if ($data instanceof Model && $data->hasErrors())
             return $this->serializeModelErrors($data);
-        } elseif ($data instanceof Arrayable) {
-            return $this->serializeModel($data);
-        } elseif ($data instanceof DataProviderInterface) {
-            return $this->serializeDataProvider($data);
+        elseif ($data instanceof Arrayable)
+            $data = [$this->serializeModel($data)];
+        elseif ($data instanceof DataProviderInterface) {
+            $data = $this->serializeDataProvider($data);
+            $collection = true;
+        }
+
+        if (ArrayHelper::isAssociative($data[0])) {
+            if ($this->keysReplacement !== null)
+                foreach ($data as &$model)
+                    $model = ArrayHelper::replaceKeys($model, $this->keysReplacement);
+
+            if ($this->variablizeKeys)
+                foreach ($data as &$model)
+                    $model = ArrayHelper::variablizeKeys($model);
+
+            if (empty($collection))
+                $data = array_shift($data);
         }
 
         return $data;
@@ -162,7 +198,7 @@ class Serializer extends Component
      * @see Model::fields()
      * @see Model::extraFields()
      */
-    protected function getRequestedFields()
+    protected function getRequestedFields(): array
     {
         $fields = $this->request->get($this->fieldsParam);
         $expand = $this->request->get($this->expandParam);
@@ -174,11 +210,12 @@ class Serializer extends Component
     }
 
     /**
-     * Serializes a data provider.
+     * Serializes a data provider
+     *
      * @param DataProviderInterface $dataProvider
-     * @return array the array representation of the data provider.
+     * @return array the array representation of the data provider
      */
-    protected function serializeDataProvider($dataProvider)
+    protected function serializeDataProvider(DataProviderInterface $dataProvider): array
     {
         if ($this->preserveKeys) {
             $models = $dataProvider->getModels();
@@ -208,12 +245,13 @@ class Serializer extends Component
     }
 
     /**
-     * Serializes a pagination into an array.
+     * Serializes a pagination into an array
+     *
      * @param Pagination $pagination
      * @return array the array representation of the pagination
      * @see addPaginationHeaders()
      */
-    protected function serializePagination($pagination)
+    protected function serializePagination(Pagination $pagination): array
     {
         return [
             $this->linksEnvelope => Link::serialize($pagination->getLinks(true)),
@@ -227,10 +265,12 @@ class Serializer extends Component
     }
 
     /**
-     * Adds HTTP headers about the pagination to the response.
+     * Adds HTTP headers about the pagination to the response
+     *
      * @param Pagination $pagination
+     * @return void
      */
-    protected function addPaginationHeaders($pagination)
+    protected function addPaginationHeaders(Pagination $pagination): void
     {
         $links = [];
         foreach ($pagination->getLinks(true) as $rel => $url) {
@@ -246,26 +286,28 @@ class Serializer extends Component
     }
 
     /**
-     * Serializes a model object.
-     * @param Arrayable $model
+     * Serializes a model object
+     *
+     * @param ActiveRecord $model
      * @return array the array representation of the model
      */
-    protected function serializeModel($model)
+    protected function serializeModel(ActiveRecord $model): array
     {
-        if ($this->request->getIsHead()) {
+        if ($this->request->getIsHead())
             return null;
-        }
 
         list($fields, $expand) = $this->getRequestedFields();
-        return $model->toArray($fields, $expand);
+
+        return $model->toArray($fields, array_merge($expand, array_keys($model->relatedRecords)));
     }
 
     /**
-     * Serializes the validation errors in a model.
+     * Serializes the validation errors in a model
+     *
      * @param Model $model
      * @return array the array representation of the errors
      */
-    protected function serializeModelErrors($model)
+    protected function serializeModelErrors(Model $model): array
     {
         $this->response->setStatusCode(422, 'Data Validation Failed.');
         $result = [];
@@ -280,11 +322,12 @@ class Serializer extends Component
     }
 
     /**
-     * Serializes a set of models.
+     * Serializes a set of models
+     *
      * @param array $models
      * @return array the array representation of the models
      */
-    protected function serializeModels(array $models)
+    protected function serializeModels(array $models): array
     {
         list($fields, $expand) = $this->getRequestedFields();
         foreach ($models as $i => $model) {

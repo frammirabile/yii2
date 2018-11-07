@@ -7,8 +7,8 @@
 
 namespace yii\rest;
 
-use Yii;
-use yii\web\ServerErrorHttpException;
+use yii\base\InvalidConfigException;
+use yii\web\{NotFoundHttpException, ServerErrorHttpException};
 
 /**
  * DeleteAction implements the API endpoint for deleting a model.
@@ -21,22 +21,24 @@ use yii\web\ServerErrorHttpException;
 class DeleteAction extends Action
 {
     /**
-     * Deletes a model.
-     * @param mixed $id id of the model to be deleted.
-     * @throws ServerErrorHttpException on failure.
+     * Deletes a model
+     *
+     * @param mixed $id id of the model to be deleted
+     * @return void
+     * @throws InvalidConfigException
+     * @throws NotFoundHttpException
+     * @throws ServerErrorHttpException on failure
      */
-    public function run($id)
+    public function run($id): void
     {
         $model = $this->findModel($id);
 
-        if ($this->checkAccess) {
+        if ($this->checkAccess)
             call_user_func($this->checkAccess, $this->id, $model);
-        }
 
-        if ($model->delete() === false) {
-            throw new ServerErrorHttpException('Failed to delete the object for unknown reason.');
-        }
+        if ($model->delete() === false)
+            throw new ServerErrorHttpException('Model cannot be deleted');
 
-        Yii::$app->getResponse()->setStatusCode(204);
+        \Yii::$app->getResponse()->setStatusCode(204);
     }
 }

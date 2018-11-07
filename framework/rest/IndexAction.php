@@ -7,9 +7,9 @@
 
 namespace yii\rest;
 
-use Yii;
-use yii\data\ActiveDataProvider;
-use yii\data\DataFilter;
+use yii\base\InvalidConfigException;
+use yii\data\{ActiveDataProvider, DataFilter, Pagination, Sort};
+use yii\helpers\Inflector;
 
 /**
  * IndexAction implements the API endpoint for listing multiple models.
@@ -18,6 +18,9 @@ use yii\data\DataFilter;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class IndexAction extends Action
 {
@@ -45,6 +48,7 @@ class IndexAction extends Action
      * ```
      */
     public $prepareDataProvider;
+
     /**
      * @var DataFilter|null data filter to be used for the search filter composition.
      * You must setup this field explicitly in order to enable filter processing.
@@ -69,62 +73,78 @@ class IndexAction extends Action
      */
     public $dataFilter;
 
+    /**
+     * @var {@inheritdoc}
+     */
+    public $query;
+
+    /**
+     * @var Pagination|bool the pagination object
+     */
+    public $pagination = false;
+
+    /**
+     * @var Sort|bool the sorting object
+     */
+    public $sort;
 
     /**
      * @return ActiveDataProvider
+     * @throws InvalidConfigException
      */
-    public function run()
+    public function run(): ActiveDataProvider
     {
-        if ($this->checkAccess) {
+        if ($this->checkAccess)
             call_user_func($this->checkAccess, $this->id);
-        }
 
         return $this->prepareDataProvider();
     }
 
     /**
-     * Prepares the data provider that should return the requested collection of the models.
-     * @return ActiveDataProvider
+     * Prepares the data provider that should return the requested collection of the models
+     *
+     * @return ActiveDataProvider|DataFilter
+     * @throws InvalidConfigException
      */
-    protected function prepareDataProvider()
+    protected function prepareDataProvider(): object
     {
-        $requestParams = Yii::$app->getRequest()->getBodyParams();
-        if (empty($requestParams)) {
-            $requestParams = Yii::$app->getRequest()->getQueryParams();
-        }
+        $requestParams = \Yii::$app->getRequest()->getBodyParams();
+
+        if (empty($requestParams))
+            $requestParams = \Yii::$app->getRequest()->getQueryParams();
 
         $filter = null;
+
         if ($this->dataFilter !== null) {
-            $this->dataFilter = Yii::createObject($this->dataFilter);
+            $this->dataFilter = \Yii::createObject($this->dataFilter);
+
             if ($this->dataFilter->load($requestParams)) {
                 $filter = $this->dataFilter->build();
-                if ($filter === false) {
+
+                if ($filter === false)
                     return $this->dataFilter;
-                }
             }
         }
 
-        if ($this->prepareDataProvider !== null) {
+        if ($this->prepareDataProvider !== null)
             return call_user_func($this->prepareDataProvider, $this, $filter);
+
+        if (($query = $this->query) === null) {
+            /** @var $modelClass ActiveRecord */
+            $modelClass = $this->modelClass;
+            $query = $this->primaryModel === null
+                ? $modelClass::find()
+                : $this->primaryModel->getRelation(lcfirst($modelClass::name(true)));
         }
 
-        /* @var $modelClass \yii\db\BaseActiveRecord */
-        $modelClass = $this->modelClass;
-
-        $query = $modelClass::find();
-        if (!empty($filter)) {
+        if (!empty($filter))
             $query->andWhere($filter);
-        }
 
-        return Yii::createObject([
-            'class' => ActiveDataProvider::className(),
+        return \Yii::createObject([
+            'class' => ActiveDataProvider::class,
             'query' => $query,
-            'pagination' => [
-                'params' => $requestParams,
-            ],
-            'sort' => [
-                'params' => $requestParams,
-            ],
+            'pagination' => $this->pagination ?? ['params' => $requestParams],
+            'sort' => $this->sort ?: ['params' => $requestParams]
         ]);
     }
 }

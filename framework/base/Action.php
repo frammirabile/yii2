@@ -7,7 +7,8 @@
 
 namespace yii\base;
 
-use Yii;
+use yii\console\Exception;
+use yii\web\BadRequestHttpException;
 
 /**
  * Action is the base class for all controller action classes.
@@ -35,39 +36,53 @@ use Yii;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class Action extends Component
 {
     /**
+     * @event ActionEvent an event raised right before running an action
+     */
+    const EVENT_BEFORE_RUN = 'beforeRun';
+
+    /**
+     * @event ActionEvent an event raised right after running an action
+     */
+    const EVENT_AFTER_RUN = 'afterRun';
+
+    /**
      * @var string ID of the action
      */
     public $id;
+
     /**
      * @var Controller|\yii\web\Controller|\yii\console\Controller the controller that owns this action
      */
     public $controller;
 
-
     /**
-     * Constructor.
+     * Constructor
      *
      * @param string $id the ID of this action
      * @param Controller $controller the controller that owns this action
      * @param array $config name-value pairs that will be used to initialize the object properties
      */
-    public function __construct($id, $controller, $config = [])
+    public function __construct(string $id, Controller $controller, array $config = [])
     {
         $this->id = $id;
         $this->controller = $controller;
+
         parent::__construct($config);
     }
 
     /**
-     * Returns the unique ID of this action among the whole application.
+     * Returns the unique ID of this action among the whole application
      *
-     * @return string the unique ID of this action among the whole application.
+     * @return string the unique ID of this action among the whole application
      */
-    public function getUniqueId()
+    public function getUniqueId(): string
     {
         return $this->controller->getUniqueId() . '/' . $this->id;
     }
@@ -76,23 +91,26 @@ class Action extends Component
      * Runs this action with the specified parameters.
      * This method is mainly invoked by the controller.
      *
-     * @param array $params the parameters to be bound to the action's run() method.
+     * @param array $params the parameters to be bound to the action's run() method
      * @return mixed the result of the action
+     * @throws BadRequestHttpException
+     * @throws Exception
      * @throws InvalidConfigException if the action class does not have a run() method
      */
-    public function runWithParams($params)
+    public function runWithParams(array $params)
     {
-        if (!method_exists($this, 'run')) {
+        if (!method_exists($this, 'run'))
             throw new InvalidConfigException(get_class($this) . ' must define a "run()" method.');
-        }
+
         $args = $this->controller->bindActionParams($this, $params);
-        Yii::debug('Running action: ' . get_class($this) . '::run()', __METHOD__);
-        if (Yii::$app->requestedParams === null) {
-            Yii::$app->requestedParams = $args;
-        }
+        \Yii::debug('Running action: ' . get_class($this) . '::run()', __METHOD__);
+
+        if (\Yii::$app->requestedParams === null)
+            \Yii::$app->requestedParams = $args;
+
         if ($this->beforeRun()) {
             $result = call_user_func_array([$this, 'run'], $args);
-            $this->afterRun();
+            $this->afterRun($result);
 
             return $result;
         }
@@ -105,18 +123,27 @@ class Action extends Component
      * You may override this method to do preparation work for the action run.
      * If the method returns false, it will cancel the action.
      *
-     * @return bool whether to run the action.
+     * @return bool whether to run the action
      */
-    protected function beforeRun()
+    protected function beforeRun(): bool
     {
-        return true;
+        $event = new ActionEvent($this);
+        $this->trigger(self::EVENT_BEFORE_RUN, $event);
+
+        return $event->isValid;
     }
 
     /**
      * This method is called right after `run()` is executed.
      * You may override this method to do post-processing work for the action run.
+     *
+     * @param mixed $result
+     * @return void
      */
-    protected function afterRun()
+    protected function afterRun($result): void
     {
+        $event = new ActionEvent($this);
+        $event->result = $result;
+        $this->trigger(self::EVENT_AFTER_RUN, $event);
     }
 }

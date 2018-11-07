@@ -8,7 +8,7 @@
 namespace yii\console;
 
 use Yii;
-use yii\base\InvalidRouteException;
+use yii\base\{InvalidConfigException, InvalidRouteException};
 
 // define STDIN, STDOUT and STDERR if the PHP SAPI did not define them (e.g. creating console application in web env)
 // http://php.net/manual/en/features.commandline.io-streams.php
@@ -50,17 +50,20 @@ defined('STDERR') or define('STDERR', fopen('php://stderr', 'w'));
  * yii help
  * ```
  *
- * @property ErrorHandler $errorHandler The error handler application component. This property is read-only.
- * @property Request $request The request component. This property is read-only.
- * @property Response $response The response component. This property is read-only.
+ * @property ErrorHandler $errorHandler the error handler application component. This property is read-only.
+ * @property Request $request the request component. This property is read-only.
+ * @property Response $response the response component. This property is read-only.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class Application extends \yii\base\Application
 {
     /**
-     * The option name for specifying the application configuration file path.
+     * The option name for specifying the application configuration file path
      */
     const OPTION_APPCONFIG = 'appconfig';
 
@@ -69,21 +72,22 @@ class Application extends \yii\base\Application
      * meaning the `help` command.
      */
     public $defaultRoute = 'help';
+
     /**
      * @var bool whether to enable the commands provided by the core framework.
      * Defaults to true.
      */
     public $enableCoreCommands = true;
+
     /**
      * @var Controller the currently active controller instance
      */
     public $controller;
 
-
     /**
      * {@inheritdoc}
      */
-    public function __construct($config = [])
+    public function __construct(array $config = [])
     {
         $config = $this->loadConfig($config);
         parent::__construct($config);
@@ -94,10 +98,11 @@ class Application extends \yii\base\Application
      * This method will check if the command line option [[OPTION_APPCONFIG]] is specified.
      * If so, the corresponding file will be loaded as the application configuration.
      * Otherwise, the configuration provided as the parameter will be returned back.
-     * @param array $config the configuration provided in the constructor.
-     * @return array the actual configuration to be used by the application.
+     *
+     * @param array $config the configuration provided in the constructor
+     * @return array the actual configuration to be used by the application
      */
-    protected function loadConfig($config)
+    protected function loadConfig(array $config): array
     {
         if (!empty($_SERVER['argv'])) {
             $option = '--' . self::OPTION_APPCONFIG . '=';
@@ -117,9 +122,9 @@ class Application extends \yii\base\Application
     }
 
     /**
-     * Initialize the application.
+     * {@inheritdoc}
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
         if ($this->enableCoreCommands) {
@@ -136,9 +141,12 @@ class Application extends \yii\base\Application
     }
 
     /**
-     * Handles the specified request.
+     * Handles the specified request
+     *
      * @param Request $request the request to be handled
      * @return Response the resulting response
+     * @throws Exception
+     * @throws InvalidConfigException
      */
     public function handleRequest($request)
     {
@@ -168,11 +176,12 @@ class Application extends \yii\base\Application
      * \Yii::$app->runAction('controller/test', ['option' => 'value', $a, $b]);
      * ```
      *
-     * @param string $route the route that specifies the action.
+     * @param string $route the route that specifies the action
      * @param array $params the parameters to be passed to the action
      * @return int|Response the result of the action. This can be either an exit code or Response object.
      * Exit code 0 means normal, and other values mean abnormal. Exit code of `null` is treaded as `0` as well.
      * @throws Exception if the route is invalid
+     * @throws InvalidConfigException
      */
     public function runAction($route, $params = [])
     {
@@ -185,10 +194,11 @@ class Application extends \yii\base\Application
     }
 
     /**
-     * Returns the configuration of the built-in commands.
-     * @return array the configuration of the built-in commands.
+     * Returns the configuration of the built-in commands
+     *
+     * @return array the configuration of the built-in commands
      */
-    public function coreCommands()
+    public function coreCommands(): array
     {
         return [
             'asset' => 'yii\console\controllers\AssetController',
@@ -202,36 +212,51 @@ class Application extends \yii\base\Application
     }
 
     /**
-     * Returns the error handler component.
-     * @return ErrorHandler the error handler application component.
+     * Returns the error handler component
+     *
+     * @return ErrorHandler the error handler application component
+     * @throws InvalidConfigException
      */
-    public function getErrorHandler()
+    public function getErrorHandler(): ErrorHandler
     {
-        return $this->get('errorHandler');
+        /** @var ErrorHandler $errorHandler */
+        $errorHandler = $this->get('errorHandler');
+
+        return $errorHandler;
     }
 
     /**
-     * Returns the request component.
-     * @return Request the request component.
+     * Returns the request component
+     *
+     * @return Request the request component
+     * @throws InvalidConfigException
      */
-    public function getRequest()
+    public function getRequest(): Request
     {
-        return $this->get('request');
+        /** @var Request $request */
+        $request = $this->get('request');
+
+        return $request;
     }
 
     /**
-     * Returns the response component.
-     * @return Response the response component.
+     * Returns the response component
+     *
+     * @return Response the response component
+     * @throws InvalidConfigException
      */
-    public function getResponse()
+    public function getResponse(): Response
     {
-        return $this->get('response');
+        /** @var Response $response */
+        $response = $this->get('response');
+
+        return $response;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function coreComponents()
+    public function coreComponents(): array
     {
         return array_merge(parent::coreComponents(), [
             'request' => ['class' => 'yii\console\Request'],

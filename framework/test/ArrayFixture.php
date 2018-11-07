@@ -7,8 +7,8 @@
 
 namespace yii\test;
 
-use yii\base\ArrayAccessTrait;
-use yii\base\InvalidConfigException;
+use yii\base\{ArrayAccessTrait, InvalidConfigException};
+use yii\helpers\Inflector;
 
 /**
  * ArrayFixture represents arbitrary fixture that can be loaded from PHP files.
@@ -17,6 +17,9 @@ use yii\base\InvalidConfigException;
  *
  * @author Mark Jebri <mark.github@yandex.ru>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class ArrayFixture extends Fixture implements \IteratorAggregate, \ArrayAccess, \Countable
 {
@@ -28,36 +31,49 @@ class ArrayFixture extends Fixture implements \IteratorAggregate, \ArrayAccess, 
      */
     public $data = [];
 
+    /**
+     * @var string the file path or [path alias](guide:concept-aliases) of the data file that contains the fixture data.
+     * If this is not set, it will default to `FixturePath/data/TableName.php`,
+     * where `FixturePath` stands for the directory containing this fixture class, and `TableName` stands for the
+     * name of the table associated with this fixture. You can set this property to be false to prevent loading any data.
+     */
+    public $dataFile;
 
     /**
      * Loads the fixture.
      *
      * The default implementation simply stores the data returned by [[getData()]] in [[data]].
      * You should usually override this method by putting the data into the underlying database.
+     *
+     * @return void
+     * @throws \ReflectionException
+     * @throws InvalidConfigException
      */
-    public function load()
+    public function load(): void
     {
         $this->data = $this->getData();
     }
 
     /**
-     * Returns the fixture data.
+     * Returns the fixture data
      *
-     * The default implementation will try to return the fixture data by including the external file specified by [[dataFile]].
-     * The file should return the data array that will be stored in [[data]] after inserting into the database.
-     *
-     * @return array the data to be put into the database
-     * @throws InvalidConfigException if the specified data file does not exist.
+     * @return array the fixture data
+     * @throws \ReflectionException
+     * @throws InvalidConfigException if the specified data file does not exist
      */
-    protected function getData()
+    protected function getData(): array
     {
-        return $this->loadData($this->dataFile);
+        $class = new \ReflectionClass($this);
+
+        return $this->loadData($this->dataFile ?? dirname($class->getFileName()).'/data/'.Inflector::underscore(substr($class->getShortName(), 0, -7)).'.php');
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
      */
-    public function unload()
+    public function unload(): void
     {
         parent::unload();
         $this->data = [];

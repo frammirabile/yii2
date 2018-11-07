@@ -63,6 +63,12 @@ class ActiveDataFilter extends DataFilter
      * ```
      */
     public $queryOperatorMap = [];
+    /**
+     * @var \Closure[]
+     *
+     * @tbd
+     */
+    private $_filterMap = [];
 
 
     /**
@@ -107,7 +113,38 @@ class ActiveDataFilter extends DataFilter
             }
         }
 
+        /* tbd
+        if (count($condition = $this->buildCondition($condition)) == 1) {
+            if (isset($this->_filterMap[key($condition)]))
+                $this->setCondition($condition);
+        } else
+            foreach ($condition as &$_condition)
+                if (is_array($_condition) && isset($this->_filterMap[key($_condition)]))
+                    $this->setCondition($_condition);
+        */
+
         return $parts;
+    }
+
+    /**
+     * @param \Closure $filterMap
+     *
+     * @tbd
+     */
+    public function setFilterMap(\Closure $filterMap): void
+    {
+        $this->_filterMap = call_user_func($filterMap);
+    }
+
+    /**
+     * @param array $condition
+     * @return void
+     *
+     * @tbd
+     */
+    private function setCondition(array &$condition): void
+    {
+        $condition = call_user_func($this->_filterMap[key($condition)], current($condition));
     }
 
     /**

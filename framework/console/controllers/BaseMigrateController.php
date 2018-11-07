@@ -8,33 +8,32 @@
 namespace yii\console\controllers;
 
 use Yii;
-use yii\base\BaseObject;
-use yii\base\InvalidConfigException;
-use yii\base\NotSupportedException;
-use yii\console\Controller;
-use yii\console\Exception;
-use yii\console\ExitCode;
-use yii\db\MigrationInterface;
-use yii\helpers\Console;
-use yii\helpers\FileHelper;
+use yii\base\{Action, BaseObject, Exception, InvalidConfigException, NotSupportedException};
+use yii\console\{Controller, Exception as ConsoleException, ExitCode};
+use yii\db\{Migration, MigrationInterface};
+use yii\helpers\{Console, FileHelper};
 
 /**
  * BaseMigrateController is the base class for migrate controllers.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 abstract class BaseMigrateController extends Controller
 {
     /**
-     * The name of the dummy migration that marks the beginning of the whole migration history.
+     * The name of the dummy migration that marks the beginning of the whole migration history
      */
     const BASE_MIGRATION = 'm000000_000000_base';
 
     /**
-     * @var string the default command action.
+     * @var string the default command action
      */
     public $defaultAction = 'up';
+
     /**
      * @var string|array the directory containing the migration classes. This can be either
      * a [path alias](guide:concept-aliases) or a directory path.
@@ -56,6 +55,7 @@ abstract class BaseMigrateController extends Controller
      * @see $migrationNamespaces
      */
     public $migrationPath = ['@app/migrations'];
+
     /**
      * @var array list of namespaces containing the migration classes.
      *
@@ -77,12 +77,14 @@ abstract class BaseMigrateController extends Controller
      * @see $migrationPath
      */
     public $migrationNamespaces = [];
+
     /**
      * @var string the template file for generating new migrations.
      * This can be either a [path alias](guide:concept-aliases) (e.g. "@app/migrations/template.php")
      * or a file path.
      */
     public $templateFile;
+
     /**
      * @var bool indicates whether the console output should be compacted.
      * If this is set to true, the individual commands ran within the migration will not be output to the console.
@@ -91,11 +93,10 @@ abstract class BaseMigrateController extends Controller
      */
     public $compact = false;
 
-
     /**
      * {@inheritdoc}
      */
-    public function options($actionID)
+    public function options($actionID): array
     {
         return array_merge(
             parent::options($actionID),
@@ -107,11 +108,13 @@ abstract class BaseMigrateController extends Controller
     /**
      * This method is invoked right before an action is to be executed (after all possible filters.)
      * It checks the existence of the [[migrationPath]].
-     * @param \yii\base\Action $action the action to be executed.
-     * @throws InvalidConfigException if directory specified in migrationPath doesn't exist and action isn't "create".
-     * @return bool whether the action should continue to be executed.
+     *
+     * @param Action $action the action to be executed
+     * @return bool whether the action should continue to be executed
+     * @throws Exception
+     * @throws InvalidConfigException if directory specified in migrationPath doesn't exist and action isn't "create"
      */
-    public function beforeAction($action)
+    public function beforeAction($action): bool
     {
         if (parent::beforeAction($action)) {
             if (empty($this->migrationNamespaces) && empty($this->migrationPath)) {
@@ -158,10 +161,10 @@ abstract class BaseMigrateController extends Controller
      *
      * @param int $limit the number of new migrations to be applied. If 0, it means
      * applying all available new migrations.
-     *
-     * @return int the status of the action execution. 0 means normal, other values mean abnormal.
+     * @return int|null the status of the action execution. 0 means normal, other values mean abnormal.
+     * @throws InvalidConfigException
      */
-    public function actionUp($limit = 0)
+    public function actionUp(int $limit = 0): ?int
     {
         $migrations = $this->getNewMigrations();
         if (empty($migrations)) {
@@ -208,6 +211,8 @@ abstract class BaseMigrateController extends Controller
             $this->stdout("\n$n " . ($n === 1 ? 'migration was' : 'migrations were') . " applied.\n", Console::FG_GREEN);
             $this->stdout("\nMigrated up successfully.\n", Console::FG_GREEN);
         }
+
+        return null;
     }
 
     /**
@@ -223,18 +228,18 @@ abstract class BaseMigrateController extends Controller
      *
      * @param int|string $limit the number of migrations to be reverted. Defaults to 1,
      * meaning the last applied migration will be reverted. When value is "all", all migrations will be reverted.
-     * @throws Exception if the number of the steps specified is less than 1.
-     *
-     * @return int the status of the action execution. 0 means normal, other values mean abnormal.
+     * @return int|null the status of the action execution. 0 means normal, other values mean abnormal.
+     * @throws ConsoleException if the number of the steps specified is less than 1
+     * @throws InvalidConfigException
      */
-    public function actionDown($limit = 1)
+    public function actionDown(int $limit = 1): ?int
     {
         if ($limit === 'all') {
             $limit = null;
         } else {
             $limit = (int) $limit;
             if ($limit < 1) {
-                throw new Exception('The step argument must be greater than 0.');
+                throw new ConsoleException('The step argument must be greater than 0.');
             }
         }
 
@@ -269,6 +274,8 @@ abstract class BaseMigrateController extends Controller
             $this->stdout("\n$n " . ($n === 1 ? 'migration was' : 'migrations were') . " reverted.\n", Console::FG_GREEN);
             $this->stdout("\nMigrated down successfully.\n", Console::FG_GREEN);
         }
+
+        return null;
     }
 
     /**
@@ -285,18 +292,18 @@ abstract class BaseMigrateController extends Controller
      *
      * @param int|string $limit the number of migrations to be redone. Defaults to 1,
      * meaning the last applied migration will be redone. When equals "all", all migrations will be redone.
-     * @throws Exception if the number of the steps specified is less than 1.
-     *
-     * @return int the status of the action execution. 0 means normal, other values mean abnormal.
+     * @return int|null the status of the action execution. 0 means normal, other values mean abnormal.
+     * @throws ConsoleException if the number of the steps specified is less than 1
+     * @throws InvalidConfigException
      */
-    public function actionRedo($limit = 1)
+    public function actionRedo(int $limit = 1): ?int
     {
         if ($limit === 'all') {
             $limit = null;
         } else {
             $limit = (int) $limit;
             if ($limit < 1) {
-                throw new Exception('The step argument must be greater than 0.');
+                throw new ConsoleException('The step argument must be greater than 0.');
             }
         }
 
@@ -335,6 +342,8 @@ abstract class BaseMigrateController extends Controller
             $this->stdout("\n$n " . ($n === 1 ? 'migration was' : 'migrations were') . " redone.\n", Console::FG_GREEN);
             $this->stdout("\nMigration redone successfully.\n", Console::FG_GREEN);
         }
+
+        return null;
     }
 
     /**
@@ -359,9 +368,11 @@ abstract class BaseMigrateController extends Controller
      * that the application should be migrated to. This can be either the timestamp,
      * the full name of the migration, the UNIX timestamp, or the parseable datetime
      * string.
-     * @throws Exception if the version argument is invalid.
+     * @return void
+     * @throws ConsoleException if the version argument is invalid
+     * @throws InvalidConfigException
      */
-    public function actionTo($version)
+    public function actionTo(string $version): void
     {
         if (($namespaceVersion = $this->extractNamespaceMigrationVersion($version)) !== false) {
             $this->migrateToVersion($namespaceVersion);
@@ -372,7 +383,7 @@ abstract class BaseMigrateController extends Controller
         } elseif (($time = strtotime($version)) !== false) {
             $this->migrateToTime($time);
         } else {
-            throw new Exception("The version argument must be either a timestamp (e.g. 101129_185401),\n the full name of a migration (e.g. m101129_185401_create_user_table),\n the full namespaced name of a migration (e.g. app\\migrations\\M101129185401CreateUserTable),\n a UNIX timestamp (e.g. 1392853000), or a datetime string parseable\nby the strtotime() function (e.g. 2014-02-15 13:00:50).");
+            throw new ConsoleException("The version argument must be either a timestamp (e.g. 101129_185401),\n the full name of a migration (e.g. m101129_185401_create_user_table),\n the full namespaced name of a migration (e.g. app\\migrations\\M101129185401CreateUserTable),\n a UNIX timestamp (e.g. 1392853000), or a datetime string parseable\nby the strtotime() function (e.g. 2014-02-15 13:00:50).");
         }
     }
 
@@ -393,9 +404,9 @@ abstract class BaseMigrateController extends Controller
      * You may specify the name `m000000_000000_base` to set the migration history to a
      * state where no migration has been applied.
      * @return int CLI exit code
-     * @throws Exception if the version argument is invalid or the version cannot be found.
+     * @throws ConsoleException if the version argument is invalid or the version cannot be found
      */
-    public function actionMark($version)
+    public function actionMark(string $version): int
     {
         $originalVersion = $version;
         if (($namespaceVersion = $this->extractNamespaceMigrationVersion($version)) !== false) {
@@ -403,7 +414,7 @@ abstract class BaseMigrateController extends Controller
         } elseif (($migrationName = $this->extractMigrationVersion($version)) !== false) {
             $version = $migrationName;
         } elseif ($version !== static::BASE_MIGRATION) {
-            throw new Exception("The version argument must be either a timestamp (e.g. 101129_185401)\nor the full name of a migration (e.g. m101129_185401_create_user_table)\nor the full name of a namespaced migration (e.g. app\\migrations\\M101129185401CreateUserTable).");
+            throw new ConsoleException("The version argument must be either a timestamp (e.g. 101129_185401)\nor the full name of a migration (e.g. m101129_185401_create_user_table)\nor the full name of a namespaced migration (e.g. app\\migrations\\M101129185401CreateUserTable).");
         }
 
         // try mark up
@@ -441,7 +452,7 @@ abstract class BaseMigrateController extends Controller
             }
         }
 
-        throw new Exception("Unable to find the version '$originalVersion'.");
+        throw new ConsoleException("Unable to find the version '$originalVersion'.");
     }
 
     /**
@@ -451,9 +462,12 @@ abstract class BaseMigrateController extends Controller
      * yii migrate/fresh
      * ```
      *
+     * @return int|null
+     * @throws InvalidConfigException
+     * @throws NotSupportedException
      * @since 2.0.13
      */
-    public function actionFresh()
+    public function actionFresh(): ?int
     {
         if (YII_ENV_PROD) {
             $this->stdout("YII_ENV is set to 'prod'.\nRefreshing migrations is not possible on production systems.\n");
@@ -467,15 +481,18 @@ abstract class BaseMigrateController extends Controller
         } else {
             $this->stdout('Action was cancelled by user. Nothing has been performed.');
         }
+
+        return null;
     }
 
     /**
-     * Checks if given migration version specification matches namespaced migration name.
-     * @param string $rawVersion raw version specification received from user input.
-     * @return string|false actual migration version, `false` - if not match.
+     * Checks if given migration version specification matches namespaced migration name
+     *
+     * @param string $rawVersion raw version specification received from user input
+     * @return string|false actual migration version, `false` - if not match
      * @since 2.0.10
      */
-    private function extractNamespaceMigrationVersion($rawVersion)
+    private function extractNamespaceMigrationVersion(string $rawVersion)
     {
         if (preg_match('/^\\\\?([\w_]+\\\\)+m(\d{6}_?\d{6})(\D.*)?$/is', $rawVersion, $matches)) {
             return trim($rawVersion, '\\');
@@ -485,12 +502,13 @@ abstract class BaseMigrateController extends Controller
     }
 
     /**
-     * Checks if given migration version specification matches migration base name.
-     * @param string $rawVersion raw version specification received from user input.
-     * @return string|false actual migration version, `false` - if not match.
+     * Checks if given migration version specification matches migration base name
+     *
+     * @param string $rawVersion raw version specification received from user input
+     * @return string|false actual migration version, `false` - if not match
      * @since 2.0.10
      */
-    private function extractMigrationVersion($rawVersion)
+    private function extractMigrationVersion(string $rawVersion)
     {
         if (preg_match('/^m?(\d{6}_?\d{6})(\D.*)?$/is', $rawVersion, $matches)) {
             return 'm' . $matches[1];
@@ -513,16 +531,17 @@ abstract class BaseMigrateController extends Controller
      *
      * @param int|string $limit the maximum number of migrations to be displayed.
      * If it is "all", the whole migration history will be displayed.
-     * @throws \yii\console\Exception if invalid limit value passed
+     * @return void
+     * @throws ConsoleException if invalid limit value passed
      */
-    public function actionHistory($limit = 10)
+    public function actionHistory($limit = 10): void
     {
         if ($limit === 'all') {
             $limit = null;
         } else {
             $limit = (int) $limit;
             if ($limit < 1) {
-                throw new Exception('The limit must be greater than 0.');
+                throw new ConsoleException('The limit must be greater than 0.');
             }
         }
 
@@ -557,16 +576,17 @@ abstract class BaseMigrateController extends Controller
      *
      * @param int|string $limit the maximum number of new migrations to be displayed.
      * If it is `all`, all available new migrations will be displayed.
-     * @throws \yii\console\Exception if invalid limit value passed
+     * @return void
+     * @throws ConsoleException if invalid limit value passed
      */
-    public function actionNew($limit = 10)
+    public function actionNew($limit = 10): void
     {
         if ($limit === 'all') {
             $limit = null;
         } else {
             $limit = (int) $limit;
             if ($limit < 1) {
-                throw new Exception('The limit must be greater than 0.');
+                throw new ConsoleException('The limit must be greater than 0.');
             }
         }
 
@@ -618,19 +638,21 @@ abstract class BaseMigrateController extends Controller
      * drop_xxx, then the generated migration file will contain extra code,
      * in this case for creating/dropping tables.
      *
-     * @throws Exception if the name argument is invalid.
+     * @return void
+     * @throws ConsoleException if the name argument is invalid
+     * @throws Exception
      */
-    public function actionCreate($name)
+    public function actionCreate(string $name): void
     {
         if (!preg_match('/^[\w\\\\]+$/', $name)) {
-            throw new Exception('The migration name should contain letters, digits, underscore and/or backslash characters only.');
+            throw new ConsoleException('The migration name should contain letters, digits, underscore and/or backslash characters only.');
         }
 
         list($namespace, $className) = $this->generateClassName($name);
         // Abort if name is too long
         $nameLimit = $this->getMigrationNameLimit();
         if ($nameLimit !== null && strlen($className) > $nameLimit) {
-            throw new Exception('The migration name is too long.');
+            throw new ConsoleException('The migration name is too long.');
         }
 
         $migrationPath = $this->findMigrationPath($namespace);
@@ -649,12 +671,13 @@ abstract class BaseMigrateController extends Controller
     }
 
     /**
-     * Generates class base name and namespace from migration name from user input.
-     * @param string $name migration name from user input.
+     * Generates class base name and namespace from migration name from user input
+     *
+     * @param string $name migration name from user input
      * @return array list of 2 elements: 'namespace' and 'class base name'
      * @since 2.0.10
      */
-    private function generateClassName($name)
+    private function generateClassName(string $name): array
     {
         $namespace = null;
         $name = trim($name, '\\');
@@ -678,29 +701,31 @@ abstract class BaseMigrateController extends Controller
     }
 
     /**
-     * Finds the file path for the specified migration namespace.
-     * @param string|null $namespace migration namespace.
-     * @return string migration file path.
-     * @throws Exception on failure.
+     * Finds the file path for the specified migration namespace
+     *
+     * @param string|null $namespace migration namespace
+     * @return string migration file path
+     * @throws ConsoleException on failure
      * @since 2.0.10
      */
-    private function findMigrationPath($namespace)
+    private function findMigrationPath(?string $namespace): string
     {
         if (empty($namespace)) {
             return is_array($this->migrationPath) ? reset($this->migrationPath) : $this->migrationPath;
         }
 
         if (!in_array($namespace, $this->migrationNamespaces, true)) {
-            throw new Exception("Namespace '{$namespace}' not found in `migrationNamespaces`");
+            throw new ConsoleException("Namespace '{$namespace}' not found in `migrationNamespaces`");
         }
 
         return $this->getNamespacePath($namespace);
     }
 
     /**
-     * Returns the file path matching the give namespace.
-     * @param string $namespace namespace.
-     * @return string file path.
+     * Returns the file path matching the give namespace
+     *
+     * @param string $namespace namespace
+     * @return string file path
      * @since 2.0.10
      */
     private function getNamespacePath($namespace)
@@ -709,11 +734,13 @@ abstract class BaseMigrateController extends Controller
     }
 
     /**
-     * Upgrades with the specified migration class.
+     * Upgrades with the specified migration class
+     *
      * @param string $class the migration class name
      * @return bool whether the migration is successful
+     * @throws InvalidConfigException
      */
-    protected function migrateUp($class)
+    protected function migrateUp(string $class): bool
     {
         if ($class === self::BASE_MIGRATION) {
             return true;
@@ -737,11 +764,13 @@ abstract class BaseMigrateController extends Controller
     }
 
     /**
-     * Downgrades with the specified migration class.
+     * Downgrades with the specified migration class
+     *
      * @param string $class the migration class name
      * @return bool whether the migration is successful
+     * @throws InvalidConfigException
      */
-    protected function migrateDown($class)
+    protected function migrateDown(string $class): bool
     {
         if ($class === self::BASE_MIGRATION) {
             return true;
@@ -765,19 +794,21 @@ abstract class BaseMigrateController extends Controller
     }
 
     /**
-     * Creates a new migration instance.
+     * Creates a new migration instance
+     *
      * @param string $class the migration class name
-     * @return \yii\db\MigrationInterface the migration instance
+     * @return Migration the migration instance
+     * @throws InvalidConfigException
      */
-    protected function createMigration($class)
+    protected function createMigration(string $class): MigrationInterface
     {
         $this->includeMigrationFile($class);
 
-        /** @var MigrationInterface $migration */
+        /** @var Migration $migration */
         $migration = Yii::createObject($class);
-        if ($migration instanceof BaseObject && $migration->canSetProperty('compact')) {
+
+        if ($migration instanceof BaseObject && $migration->canSetProperty('compact'))
             $migration->compact = $this->compact;
-        }
 
         return $migration;
     }
@@ -788,10 +819,11 @@ abstract class BaseMigrateController extends Controller
      * This function will do nothing on namespaced migrations, which are loaded by
      * autoloading automatically. It will include the migration file, by searching
      * [[migrationPath]] for classes without namespace.
-     * @param string $class the migration class name.
+     * @param string $class the migration class name
+     * @return void
      * @since 2.0.12
      */
-    protected function includeMigrationFile($class)
+    protected function includeMigrationFile(string $class): void
     {
         $class = trim($class, '\\');
         if (strpos($class, '\\') === false) {
@@ -811,10 +843,14 @@ abstract class BaseMigrateController extends Controller
     }
 
     /**
-     * Migrates to the specified apply time in the past.
-     * @param int $time UNIX timestamp value.
+     * Migrates to the specified apply time in the past
+     *
+     * @param int $time UNIX timestamp value
+     * @return void
+     * @throws ConsoleException
+     * @throws InvalidConfigException
      */
-    protected function migrateToTime($time)
+    protected function migrateToTime(int $time): void
     {
         $count = 0;
         $migrations = array_values($this->getMigrationHistory(null));
@@ -829,12 +865,14 @@ abstract class BaseMigrateController extends Controller
     }
 
     /**
-     * Migrates to the certain version.
-     * @param string $version name in the full format.
+     * Migrates to the certain version
+     *
+     * @param string $version name in the full format
      * @return int CLI exit code
-     * @throws Exception if the provided version cannot be found.
+     * @throws ConsoleException if the provided version cannot be found
+     * @throws InvalidConfigException
      */
-    protected function migrateToVersion($version)
+    protected function migrateToVersion(string $version): int
     {
         $originalVersion = $version;
 
@@ -862,14 +900,15 @@ abstract class BaseMigrateController extends Controller
             }
         }
 
-        throw new Exception("Unable to find the version '$originalVersion'.");
+        throw new ConsoleException("Unable to find the version '$originalVersion'.");
     }
 
     /**
-     * Returns the migrations that are not applied.
+     * Returns the migrations that are not applied
+     *
      * @return array list of new migrations
      */
-    protected function getNewMigrations()
+    protected function getNewMigrations(): array
     {
         $applied = [];
         foreach ($this->getMigrationHistory(null) as $class => $time) {
@@ -921,15 +960,16 @@ abstract class BaseMigrateController extends Controller
     /**
      * Generates new migration source PHP code.
      * Child class may override this method, adding extra logic or variation to the process.
+     *
      * @param array $params generation parameters, usually following parameters are present:
      *
      *  - name: string migration base name
      *  - className: string migration class name
      *
-     * @return string generated PHP code.
+     * @return string generated PHP code
      * @since 2.0.8
      */
-    protected function generateMigrationSourceCode($params)
+    protected function generateMigrationSourceCode(array $params): string
     {
         return $this->renderFile(Yii::getAlias($this->templateFile), $params);
     }
@@ -937,10 +977,12 @@ abstract class BaseMigrateController extends Controller
     /**
      * Truncates the database.
      * This method should be overwritten in subclasses to implement the task of clearing the database.
+     *
+     * @return void
      * @throws NotSupportedException if not overridden
      * @since 2.0.13
      */
-    protected function truncateDatabase()
+    protected function truncateDatabase(): void
     {
         throw new NotSupportedException('This command is not implemented in ' . get_class($this));
     }
@@ -949,30 +991,36 @@ abstract class BaseMigrateController extends Controller
      * Return the maximum name length for a migration.
      *
      * Subclasses may override this method to define a limit.
-     * @return int|null the maximum name length for a migration or `null` if no limit applies.
+     *
+     * @return int|null the maximum name length for a migration or `null` if no limit applies
      * @since 2.0.13
      */
-    protected function getMigrationNameLimit()
+    protected function getMigrationNameLimit(): ?int
     {
         return null;
     }
 
     /**
-     * Returns the migration history.
-     * @param int $limit the maximum number of records in the history to be returned. `null` for "no limit".
+     * Returns the migration history
+     *
+     * @param int|null $limit the maximum number of records in the history to be returned. `null` for "no limit".
      * @return array the migration history
      */
-    abstract protected function getMigrationHistory($limit);
+    abstract protected function getMigrationHistory(?int $limit): array;
 
     /**
-     * Adds new migration entry to the history.
-     * @param string $version migration version name.
+     * Adds new migration entry to the history
+     *
+     * @param string $version migration version name
+     * @return void
      */
-    abstract protected function addMigrationHistory($version);
+    abstract protected function addMigrationHistory(string $version): void;
 
     /**
-     * Removes existing migration from the history.
-     * @param string $version migration version name.
+     * Removes existing migration from the history
+     *
+     * @param string $version migration version name
+     * @return void
      */
-    abstract protected function removeMigrationHistory($version);
+    abstract protected function removeMigrationHistory(string $version): void;
 }

@@ -16,6 +16,7 @@ use yii\base\Model;
 use yii\base\ModelEvent;
 use yii\base\NotSupportedException;
 use yii\base\UnknownMethodException;
+use yii\base\UnknownPropertyException;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -279,6 +280,7 @@ abstract class BaseActiveRecord extends Model implements ActiveRecordInterface
      *
      * @param string $name property name
      * @throws InvalidArgumentException if relation name is wrong
+     * @throws UnknownPropertyException
      * @return mixed property value
      * @see getAttribute()
      */
@@ -309,6 +311,7 @@ abstract class BaseActiveRecord extends Model implements ActiveRecordInterface
      * This method is overridden so that AR attributes can be accessed like properties.
      * @param string $name property name
      * @param mixed $value property value
+     * @throws UnknownPropertyException
      */
     public function __set($name, $value)
     {
@@ -671,6 +674,7 @@ abstract class BaseActiveRecord extends Model implements ActiveRecordInterface
      * @param array $attributeNames list of attribute names that need to be saved. Defaults to null,
      * meaning all attributes that are loaded from DB will be saved.
      * @return bool whether the saving succeeded (i.e. no validation errors occurred).
+     * @throws Exception
      */
     public function save($runValidation = true, $attributeNames = null)
     {

@@ -170,7 +170,7 @@ class User extends Component
         }
     }
 
-    private $_identity = false;
+    protected $_identity = false;
 
     /**
      * Returns the identity object associated with the currently logged-in user.

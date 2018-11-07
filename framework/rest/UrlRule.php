@@ -10,9 +10,7 @@ namespace yii\rest;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Inflector;
-use yii\web\CompositeUrlRule;
-use yii\web\UrlRule as WebUrlRule;
-use yii\web\UrlRuleInterface;
+use yii\web\{CompositeUrlRule, Request, UrlManager, UrlRule as WebUrlRule, UrlRuleInterface};
 
 /**
  * UrlRule is provided to simplify the creation of URL rules for RESTful API support.
@@ -58,22 +56,27 @@ use yii\web\UrlRuleInterface;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class UrlRule extends CompositeUrlRule
 {
     /**
-     * @var string the common prefix string shared by all patterns.
+     * @var string the common prefix string shared by all patterns
      */
-    public $prefix;
+    public $prefix = '<module:(?:v\d+)?><path:(?:\/\w+\/\d+)*>';
+
     /**
-     * @var string the suffix that will be assigned to [[\yii\web\UrlRule::suffix]] for every generated rule.
+     * @var string the suffix that will be assigned to [[\yii\web\UrlRule::suffix]] for every generated rule
      */
     public $suffix;
+
     /**
      * @var string|array the controller ID (e.g. `user`, `post-comment`) that the rules in this composite rule
      * are dealing with. It should be prefixed with the module ID if the controller is within a module (e.g. `admin/user`).
      *
-     * By default, the controller ID will be pluralized automatically when it is put in the patterns of the
+     * By default, the controller ID will not be pluralized automatically when it is put in the patterns of the
      * generated rules. If you want to explicitly specify how the controller ID should appear in the patterns,
      * you may use an array with the array key being as the controller ID in the pattern, and the array value
      * the actual controller ID. For example, `['u' => 'user']`.
@@ -82,32 +85,39 @@ class UrlRule extends CompositeUrlRule
      * generate applicable URL rules for EVERY specified controller. For example, `['user', 'post']`.
      */
     public $controller;
+
     /**
      * @var array list of acceptable actions. If not empty, only the actions within this array
      * will have the corresponding URL rules created.
      * @see patterns
      */
     public $only = [];
+
     /**
      * @var array list of actions that should be excluded. Any action found in this array
      * will NOT have its URL rules created.
      * @see patterns
      */
     public $except = [];
+
     /**
      * @var array patterns for supporting extra actions in addition to those listed in [[patterns]].
      * The keys are the patterns and the values are the corresponding action IDs.
      * These extra patterns will take precedence over [[patterns]].
      */
     public $extraPatterns = [];
+
     /**
      * @var array list of tokens that should be replaced for each pattern. The keys are the token names,
      * and the values are the corresponding replacements.
      * @see patterns
      */
     public $tokens = [
-        '{id}' => '<id:\\d[\\d,]*>',
+        '{id}' => '<id:\d+>',
+        '{ids}' => '<id:\d[\d,]*>',
+        '{email}' => '<email:[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}>'
     ];
+
     /**
      * @var array list of possible patterns and the corresponding actions for creating the URL rules.
      * The keys are the patterns and the values are the corresponding actions.
@@ -123,50 +133,57 @@ class UrlRule extends CompositeUrlRule
         'POST' => 'create',
         'GET,HEAD' => 'index',
         '{id}' => 'options',
-        '' => 'options',
+        '' => 'options'
     ];
+
     /**
-     * @var array the default configuration for creating each URL rule contained by this rule.
+     * @var array the default configuration for creating each URL rule contained by this rule
      */
-    public $ruleConfig = [
-        'class' => 'yii\web\UrlRule',
-    ];
+    public $ruleConfig = ['class' => 'yii\web\UrlRule'];
+
     /**
      * @var bool whether to automatically pluralize the URL names for controllers.
      * If true, a controller ID will appear in plural form in URLs. For example, `user` controller
      * will appear as `users` in URLs.
      * @see controller
      */
-    public $pluralize = true;
-
+    public $pluralize = false;
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
+     * @throws InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
-        if (empty($this->controller)) {
+        if (empty($this->controller))
             throw new InvalidConfigException('"controller" must be set.');
-        }
 
         $controllers = [];
         foreach ((array) $this->controller as $urlName => $controller) {
-            if (is_int($urlName)) {
+            if (is_int($urlName))
                 $urlName = $this->pluralize ? Inflector::pluralize($controller) : $controller;
-            }
+
             $controllers[$urlName] = $controller;
         }
-        $this->controller = $controllers;
 
+        $this->controller = $controllers;
         $this->prefix = trim($this->prefix, '/');
+        $this->only[] = 'options';
+
+        if (!empty($this->extraPatterns))
+            foreach ($this->extraPatterns as $pattern => $action)
+                $this->extraPatterns['OPTIONS'.strstr($pattern, ' ')] = 'options';
 
         parent::init();
     }
 
     /**
      * {@inheritdoc}
+     * @throws InvalidConfigException
      */
-    protected function createRules()
+    protected function createRules(): array
     {
         $only = array_flip($this->only);
         $except = array_flip($this->except);
@@ -185,13 +202,15 @@ class UrlRule extends CompositeUrlRule
     }
 
     /**
-     * Creates a URL rule using the given pattern and action.
+     * Creates a URL rule using the given pattern and action
+     *
      * @param string $pattern
      * @param string $prefix
      * @param string $action
      * @return UrlRuleInterface
+     * @throws InvalidConfigException
      */
-    protected function createRule($pattern, $prefix, $action)
+    protected function createRule(string $pattern, string $prefix, string $action): UrlRuleInterface
     {
         $verbs = 'GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS';
         if (preg_match("/^((?:($verbs),)*($verbs))(?:\\s+(.*))?$/", $pattern, $matches)) {
@@ -210,11 +229,20 @@ class UrlRule extends CompositeUrlRule
         }
         $config['suffix'] = $this->suffix;
 
-        return Yii::createObject($config);
+        /** @var UrlRuleInterface $urlRule */
+        $urlRule = Yii::createObject($config);
+
+        return $urlRule;
     }
 
     /**
-     * {@inheritdoc}
+     * Parses the given request and returns the corresponding route and parameters
+     *
+     * @param UrlManager $manager the URL manager
+     * @param Request $request the request component
+     * @return array|bool the parsing result. The route and the parameters are returned as an array.
+     * If false, it means this rule cannot be used to parse this path info.
+     * @throws InvalidConfigException
      */
     public function parseRequest($manager, $request)
     {
@@ -228,7 +256,7 @@ class UrlRule extends CompositeUrlRule
                         Yii::debug([
                             'rule' => method_exists($rule, '__toString') ? $rule->__toString() : get_class($rule),
                             'match' => $result !== false,
-                            'parent' => self::className(),
+                            'parent' => self::class,
                         ], __METHOD__);
                     }
                     if ($result !== false) {

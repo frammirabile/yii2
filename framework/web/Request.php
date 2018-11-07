@@ -506,7 +506,7 @@ class Request extends \yii\base\Request
         $this->_rawBody = $rawBody;
     }
 
-    private $_bodyParams;
+    protected $_bodyParams;
 
     /**
      * Returns the request parameters given in the request body.

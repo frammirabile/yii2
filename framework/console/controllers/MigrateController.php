@@ -8,11 +8,10 @@
 namespace yii\console\controllers;
 
 use Yii;
-use yii\db\Connection;
-use yii\db\Query;
+use yii\base\{Action, Exception, InvalidConfigException};
+use yii\db\{Connection, Exception as DbException, Migration, MigrationInterface, Query};
 use yii\di\Instance;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Console;
+use yii\helpers\{ArrayHelper, Console};
 
 /**
  * Manages application migrations.
@@ -70,23 +69,28 @@ use yii\helpers\Console;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class MigrateController extends BaseMigrateController
 {
     /**
-     * Maximum length of a migration name.
+     * Maximum length of a migration name
      * @since 2.0.13
      */
     const MAX_NAME_LENGTH = 180;
 
     /**
-     * @var string the name of the table for keeping applied migration information.
+     * @var string the name of the table for keeping applied migration information
      */
     public $migrationTable = '{{%migration}}';
+
     /**
      * {@inheritdoc}
      */
     public $templateFile = '@yii/views/migration.php';
+
     /**
      * @var array a set of template paths for generating migration code automatically.
      *
@@ -106,6 +110,7 @@ class MigrateController extends BaseMigrateController
         'drop_column' => '@yii/views/dropColumnMigration.php',
         'create_junction' => '@yii/views/createTableMigration.php',
     ];
+
     /**
      * @var bool indicates whether the table names generated should consider
      * the `tablePrefix` setting of the DB connection. For example, if the table
@@ -113,6 +118,7 @@ class MigrateController extends BaseMigrateController
      * @since 2.0.8
      */
     public $useTablePrefix = true;
+
     /**
      * @var array column definition strings used for creating migration code.
      *
@@ -126,23 +132,24 @@ class MigrateController extends BaseMigrateController
      * @since 2.0.7
      */
     public $fields = [];
+
     /**
      * @var Connection|array|string the DB connection object or the application component ID of the DB connection to use
      * when applying migrations. Starting from version 2.0.3, this can also be a configuration array
      * for creating the object.
      */
     public $db = 'db';
+
     /**
-     * @var string the comment for the table being created.
+     * @var string the comment for the table being created
      * @since 2.0.14
      */
     public $comment = '';
 
-
     /**
      * {@inheritdoc}
      */
-    public function options($actionID)
+    public function options($actionID): array
     {
         return array_merge(
             parent::options($actionID),
@@ -157,7 +164,7 @@ class MigrateController extends BaseMigrateController
      * {@inheritdoc}
      * @since 2.0.8
      */
-    public function optionAliases()
+    public function optionAliases(): array
     {
         return array_merge(parent::optionAliases(), [
             'C' => 'comment',
@@ -166,20 +173,23 @@ class MigrateController extends BaseMigrateController
             't' => 'migrationTable',
             'F' => 'templateFile',
             'P' => 'useTablePrefix',
-            'c' => 'compact',
+            'c' => 'compact'
         ]);
     }
 
     /**
      * This method is invoked right before an action is to be executed (after all possible filters.)
      * It checks the existence of the [[migrationPath]].
-     * @param \yii\base\Action $action the action to be executed.
-     * @return bool whether the action should continue to be executed.
+     *
+     * @param Action $action the action to be executed
+     * @return bool whether the action should continue to be executed
+     * @throws Exception
+     * @throws InvalidConfigException
      */
-    public function beforeAction($action)
+    public function beforeAction($action): bool
     {
         if (parent::beforeAction($action)) {
-            $this->db = Instance::ensure($this->db, Connection::className());
+            $this->db = Instance::ensure($this->db, Connection::class);
             return true;
         }
 
@@ -187,25 +197,31 @@ class MigrateController extends BaseMigrateController
     }
 
     /**
-     * Creates a new migration instance.
+     * Creates a new migration instance
+     *
      * @param string $class the migration class name
-     * @return \yii\db\Migration the migration instance
+     * @return Migration the migration instance
+     * @throws InvalidConfigException
      */
-    protected function createMigration($class)
+    protected function createMigration(string $class): MigrationInterface
     {
         $this->includeMigrationFile($class);
 
-        return Yii::createObject([
+        /** @var Migration $migration */
+        $migration = Yii::createObject([
             'class' => $class,
             'db' => $this->db,
-            'compact' => $this->compact,
+            'compact' => $this->compact
         ]);
+
+        return $migration;
     }
 
     /**
      * {@inheritdoc}
+     * @throws DbException
      */
-    protected function getMigrationHistory($limit)
+    protected function getMigrationHistory(?int $limit): array
     {
         if ($this->db->schema->getTableSchema($this->migrationTable, true) === null) {
             $this->createMigrationHistoryTable();
@@ -260,9 +276,12 @@ class MigrateController extends BaseMigrateController
     }
 
     /**
-     * Creates the migration history table.
+     * Creates the migration history table
+     *
+     * @return void
+     * @throws DbException
      */
-    protected function createMigrationHistoryTable()
+    protected function createMigrationHistoryTable(): void
     {
         $tableName = $this->db->schema->getRawTableName($this->migrationTable);
         $this->stdout("Creating migration history table \"$tableName\"...", Console::FG_YELLOW);
@@ -279,8 +298,9 @@ class MigrateController extends BaseMigrateController
 
     /**
      * {@inheritdoc}
+     * @throws DbException
      */
-    protected function addMigrationHistory($version)
+    protected function addMigrationHistory(string $version): void
     {
         $command = $this->db->createCommand();
         $command->insert($this->migrationTable, [
@@ -291,9 +311,11 @@ class MigrateController extends BaseMigrateController
 
     /**
      * {@inheritdoc}
+     * @return void
+     * @throws DbException
      * @since 2.0.13
      */
-    protected function truncateDatabase()
+    protected function truncateDatabase(): void
     {
         $db = $this->db;
         $schemas = $db->schema->getTableSchemas();
@@ -326,8 +348,9 @@ class MigrateController extends BaseMigrateController
 
     /**
      * {@inheritdoc}
+     * @throws DbException
      */
-    protected function removeMigrationHistory($version)
+    protected function removeMigrationHistory(string $version): void
     {
         $command = $this->db->createCommand();
         $command->delete($this->migrationTable, [
@@ -341,7 +364,7 @@ class MigrateController extends BaseMigrateController
      * {@inheritdoc}
      * @since 2.0.13
      */
-    protected function getMigrationNameLimit()
+    protected function getMigrationNameLimit(): ?int
     {
         if ($this->_migrationNameLimit !== null) {
             return $this->_migrationNameLimit;
@@ -358,7 +381,7 @@ class MigrateController extends BaseMigrateController
      * {@inheritdoc}
      * @since 2.0.8
      */
-    protected function generateMigrationSourceCode($params)
+    protected function generateMigrationSourceCode(array $params): string
     {
         $parsedFields = $this->parseFields();
         $fields = $parsedFields['fields'];
@@ -424,7 +447,7 @@ class MigrateController extends BaseMigrateController
             if ($relatedColumn === null) {
                 $relatedColumn = 'id';
                 try {
-                    $this->db = Instance::ensure($this->db, Connection::className());
+                    $this->db = Instance::ensure($this->db, Connection::class);
                     $relatedTableSchema = $this->db->getTableSchema($relatedTable);
                     if ($relatedTableSchema !== null) {
                         $primaryKeyCount = count($relatedTableSchema->primaryKey);
@@ -436,7 +459,7 @@ class MigrateController extends BaseMigrateController
                             $this->stdout("Related table for field \"{$column}\" exists, but does not have a primary key. Default name \"id\" will be used for related field.\n", Console::FG_YELLOW);
                         }
                     }
-                } catch (\ReflectionException $e) {
+                } catch (\Exception $e) {
                     $this->stdout("Cannot initialize database component to try reading referenced table schema for field \"{$column}\". Default name \"id\" will be used for related field.\n", Console::FG_YELLOW);
                 }
             }
@@ -458,9 +481,9 @@ class MigrateController extends BaseMigrateController
 
     /**
      * If `useTablePrefix` equals true, then the table name will contain the
-     * prefix format.
+     * prefix format
      *
-     * @param string $tableName the table name to generate.
+     * @param string $tableName the table name to generate
      * @return string
      * @since 2.0.8
      */
@@ -524,7 +547,7 @@ class MigrateController extends BaseMigrateController
     }
 
     /**
-     * Adds default primary key to fields list if there's no primary key specified.
+     * Adds default primary key to fields list if there's no primary key specified
      * @param array $fields parsed fields
      * @since 2.0.7
      */

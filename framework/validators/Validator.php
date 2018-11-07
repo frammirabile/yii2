@@ -84,7 +84,9 @@ class Validator extends Component
             'class' => 'yii\validators\NumberValidator',
             'integerOnly' => true,
         ],
+        'json' => 'yii\validators\JsonValidator',
         'match' => 'yii\validators\RegularExpressionValidator',
+        'model' => 'yii\validators\ModelValidator',
         'number' => 'yii\validators\NumberValidator',
         'required' => 'yii\validators\RequiredValidator',
         'safe' => 'yii\validators\SafeValidator',
@@ -96,7 +98,7 @@ class Validator extends Component
         ],
         'unique' => 'yii\validators\UniqueValidator',
         'url' => 'yii\validators\UrlValidator',
-        'ip' => 'yii\validators\IpValidator',
+        'ip' => 'yii\validators\IpValidator'
     ];
     /**
      * @var array|string attributes to be validated by this validator. For multiple attributes,

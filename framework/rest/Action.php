@@ -7,9 +7,9 @@
 
 namespace yii\rest;
 
-use Yii;
 use yii\base\InvalidConfigException;
-use yii\db\ActiveRecordInterface;
+use yii\db\{ActiveQueryInterface, ActiveRecordInterface};
+use yii\helpers\{Inflector, StringHelper};
 use yii\web\NotFoundHttpException;
 
 /**
@@ -19,6 +19,9 @@ use yii\web\NotFoundHttpException;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class Action extends \yii\base\Action
 {
@@ -28,6 +31,7 @@ class Action extends \yii\base\Action
      * This property must be set.
      */
     public $modelClass;
+
     /**
      * @var callable a PHP callable that will be called to return the model corresponding
      * to the specified primary key value. If not set, [[findModel()]] will be used instead.
@@ -44,6 +48,7 @@ class Action extends \yii\base\Action
      * The callable should return the model found, or throw an exception if not found.
      */
     public $findModel;
+
     /**
      * @var callable a PHP callable that will be called when running an action to determine
      * if the current user has the permission to execute the action. If not set, the access
@@ -58,20 +63,49 @@ class Action extends \yii\base\Action
      */
     public $checkAccess;
 
+    /**
+     * @var ActiveRecordInterface|null the primary model
+     */
+    protected $primaryModel;
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
+     * @throws InvalidConfigException
+     * @throws NotFoundHttpException
      */
-    public function init()
+    public function init(): void
     {
-        if ($this->modelClass === null) {
-            throw new InvalidConfigException(get_class($this) . '::$modelClass must be set.');
+        if ($this->modelClass === null)
+            throw new InvalidConfigException(get_class($this).'::$modelClass must be set.');
+
+        if (preg_match('/(?:v\d+\/)?((?:\w+\/\d+\/)+)\w+(?:\/\d+)?/', \Yii::$app->request->pathInfo, $matches)) {
+            $iterator = (new \ArrayObject(explode('/', trim($matches[1], '/'))))->getIterator();
+
+            if ($iterator->valid()) {
+                /** @var ActiveRecord $primaryModelClass */
+                $primaryModelClass = \Yii::$app->modelNamespace.'\\'.Inflector::camelize($iterator->current());
+                $iterator->next();
+
+                if (($this->primaryModel = $primaryModelClass::findOne(array_combine($primaryModelClass::primaryKey(), (array) $iterator->current()))) === null)
+                    throw new NotFoundHttpException($primaryModelClass::name().' not found');
+
+                $iterator->next();
+                while ($iterator->valid()) {
+                    $relation = Inflector::pluralize($iterator->current());
+                    $iterator->next();
+                    $this->primaryModel = $this->primaryModel->getRelation($relation)->where(['id' => $iterator->current()])->one();
+                    $iterator->next();
+                }
+            }
         }
     }
 
     /**
      * Returns the data model based on the primary key given.
      * If the data model is not found, a 404 HTTP exception will be raised.
+     *
      * @param string $id the ID of the model to be loaded. If the model has a composite primary key,
      * the ID must be a string of the primary key values separated by commas.
      * The order of the primary key values should follow that returned by the `primaryKey()` method
@@ -79,28 +113,28 @@ class Action extends \yii\base\Action
      * @return ActiveRecordInterface the model found
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function findModel($id)
+    public function findModel(string $id): ActiveRecordInterface
     {
-        if ($this->findModel !== null) {
+        if ($this->findModel !== null)
             return call_user_func($this->findModel, $id, $this);
-        }
 
-        /* @var $modelClass ActiveRecordInterface */
+        /* @var $modelClass ActiveRecord */
         $modelClass = $this->modelClass;
         $keys = $modelClass::primaryKey();
-        if (count($keys) > 1) {
+
+        if ($this->primaryModel !== null)
+            $model = ($relation = $this->primaryModel->getRelation(lcfirst($modelClass::name(true))))->where([current(array_reverse($relation->modelClass::primaryKey())) => $id])->one();
+        elseif (count($keys) > 1) {
             $values = explode(',', $id);
-            if (count($keys) === count($values)) {
+
+            if (count($keys) === count($values))
                 $model = $modelClass::findOne(array_combine($keys, $values));
-            }
-        } elseif ($id !== null) {
+        } elseif ($id !== null)
             $model = $modelClass::findOne($id);
-        }
 
-        if (isset($model)) {
+        if (isset($model))
             return $model;
-        }
 
-        throw new NotFoundHttpException("Object not found: $id");
+        throw new NotFoundHttpException($modelClass::name().' not found');
     }
 }

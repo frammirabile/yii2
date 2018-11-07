@@ -7,8 +7,8 @@
 
 namespace yii\rest;
 
-use Yii;
-use yii\base\Model;
+use yii\base\{InvalidConfigException, Model};
+use yii\db\{ActiveRecordInterface, Exception};
 use yii\helpers\Url;
 use yii\web\ServerErrorHttpException;
 
@@ -23,40 +23,44 @@ use yii\web\ServerErrorHttpException;
 class CreateAction extends Action
 {
     /**
-     * @var string the scenario to be assigned to the new model before it is validated and saved.
+     * @var string the scenario to be assigned to the new model before it is validated and saved
      */
     public $scenario = Model::SCENARIO_DEFAULT;
+
     /**
-     * @var string the name of the view action. This property is needed to create the URL when the model is successfully created.
+     * @var string the name of the view action. This property is needed to create the URL when the model is successfully created
      */
     public $viewAction = 'view';
 
+    /**
+     * @var array data to be loaded
+     */
+    public $data = [];
 
     /**
-     * Creates a new model.
-     * @return \yii\db\ActiveRecordInterface the model newly created
+     * Creates a new model
+     *
+     * @return ActiveRecordInterface the model newly created
+     * @throws Exception
+     * @throws InvalidConfigException
      * @throws ServerErrorHttpException if there is any error when creating the model
      */
-    public function run()
+    public function run(): ActiveRecordInterface
     {
-        if ($this->checkAccess) {
+        if ($this->checkAccess)
             call_user_func($this->checkAccess, $this->id);
-        }
 
-        /* @var $model \yii\db\ActiveRecord */
-        $model = new $this->modelClass([
-            'scenario' => $this->scenario,
-        ]);
+        /** @var $model ActiveRecord */
+        $model = new $this->modelClass(['scenario' => $this->scenario]);
+        $model->load($this->data ?: \Yii::$app->getRequest()->getBodyParams(), '');
 
-        $model->load(Yii::$app->getRequest()->getBodyParams(), '');
         if ($model->save()) {
-            $response = Yii::$app->getResponse();
+            $response = \Yii::$app->getResponse();
             $response->setStatusCode(201);
             $id = implode(',', array_values($model->getPrimaryKey(true)));
             $response->getHeaders()->set('Location', Url::toRoute([$this->viewAction, 'id' => $id], true));
-        } elseif (!$model->hasErrors()) {
-            throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
-        }
+        } elseif (!$model->hasErrors())
+            throw new ServerErrorHttpException('Model cannot be created');
 
         return $model;
     }

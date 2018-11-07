@@ -7,9 +7,8 @@
 
 namespace yii\rest;
 
-use yii\base\InvalidConfigException;
-use yii\base\Model;
-use yii\web\ForbiddenHttpException;
+use yii\filters\Cors;
+use yii\helpers\{ArrayHelper, StringHelper, UnsetArrayValue};
 
 /**
  * ActiveController implements a common set of actions for supporting RESTful access to ActiveRecord.
@@ -36,87 +35,148 @@ use yii\web\ForbiddenHttpException;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
-class ActiveController extends Controller
+abstract class ActiveController extends Controller
 {
+    /**
+     * @var string the scenario used for creating a model
+     */
+    public $createScenario = ActiveRecord::SCENARIO_CREATE;
+
+    /**
+     * @var string the scenario used for updating a model
+     */
+    public $updateScenario = ActiveRecord::SCENARIO_UPDATE;
+
     /**
      * @var string the model class name. This property must be set.
      */
-    public $modelClass;
-    /**
-     * @var string the scenario used for updating a model.
-     * @see \yii\base\Model::scenarios()
-     */
-    public $updateScenario = Model::SCENARIO_DEFAULT;
-    /**
-     * @var string the scenario used for creating a model.
-     * @see \yii\base\Model::scenarios()
-     */
-    public $createScenario = Model::SCENARIO_DEFAULT;
-
+    protected $modelClass;
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
      */
-    public function init()
+    public function init(): void
     {
-        parent::init();
-        if ($this->modelClass === null) {
-            throw new InvalidConfigException('The "modelClass" property must be set.');
-        }
+        if ($this->modelClass === null)
+            $this->modelClass = \Yii::$app->modelNamespace.'\\'.StringHelper::basename(get_class($this), 'Controller');
     }
 
     /**
      * {@inheritdoc}
      */
-    public function actions()
+    public function behaviors(): array
+    {
+        return ArrayHelper::merge(parent::behaviors(), [
+            'contentNegotiator' => [
+                'formats' => ['text/plain' => Response::FORMAT_RAW]
+            ],
+            'authenticator' => new UnsetArrayValue,
+            [
+                'class' => Cors::class,
+                'cors' => ['Access-Control-Request-Headers' => ['Accept', 'Accept-Language', 'Authorization', 'Content-Type']]
+            ],
+            $this->authMethods()
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function actions(): array
     {
         return [
-            'index' => [
-                'class' => 'yii\rest\IndexAction',
+            'create' => [
+                'class' => CreateAction::class,
                 'modelClass' => $this->modelClass,
                 'checkAccess' => [$this, 'checkAccess'],
+                'scenario' => $this->createScenario
             ],
             'view' => [
-                'class' => 'yii\rest\ViewAction',
+                'class' => ViewAction::class,
                 'modelClass' => $this->modelClass,
-                'checkAccess' => [$this, 'checkAccess'],
+                'checkAccess' => [$this, 'checkAccess']
             ],
-            'create' => [
-                'class' => 'yii\rest\CreateAction',
+            'index' => [
+                'class' => IndexAction::class,
                 'modelClass' => $this->modelClass,
-                'checkAccess' => [$this, 'checkAccess'],
-                'scenario' => $this->createScenario,
+                'checkAccess' => [$this, 'checkAccess']
             ],
             'update' => [
-                'class' => 'yii\rest\UpdateAction',
+                'class' => UpdateAction::class,
                 'modelClass' => $this->modelClass,
                 'checkAccess' => [$this, 'checkAccess'],
-                'scenario' => $this->updateScenario,
+                'scenario' => $this->updateScenario
             ],
             'delete' => [
-                'class' => 'yii\rest\DeleteAction',
+                'class' => DeleteAction::class,
                 'modelClass' => $this->modelClass,
-                'checkAccess' => [$this, 'checkAccess'],
+                'checkAccess' => [$this, 'checkAccess']
             ],
-            'options' => [
-                'class' => 'yii\rest\OptionsAction',
-            ],
+            'options' => OptionsAction::class
         ];
+
+        /* tbd
+        if (in_array(Filterable::class, class_implements($this->modelClass)))
+            ArrayHelper::setValue($actions, 'index.dataFilter', [
+                'class' => ActiveDataFilter::class,
+                'searchModel' => function() {
+                    *//** @var Filterable $modelClass *//*
+                    $modelClass = $this->modelClass;
+                    $searchModel = new DynamicModel(array_keys($modelClass::filters()));
+
+                    foreach ($modelClass::filters() as $attribute => $validators)
+                        foreach ((array) $validators as $validator)
+                            if (is_string($validator))
+                                $searchModel->addRule($attribute, $validator);
+                            elseif (is_array($validator))
+                                $searchModel->addRule($attribute, $validator[0], array_slice($validator, 1));
+
+                    return $searchModel;
+                },
+                'filterMap' => function() {
+                    *//** @var Filterable $modelClass *//*
+                    $modelClass = $this->modelClass;
+                    $filterMap = [];
+
+                    foreach ($modelClass::filters() as $attribute => $validators)
+                        foreach ((array) $validators as $validator)
+                            if ($validator instanceof \Closure) {
+                                $filterMap[$attribute] = $validator;
+                                continue 2;
+                            }
+
+                    return $filterMap;
+                }
+            ]);
+        */
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function verbs()
+    protected function verbs(): array
     {
         return [
-            'index' => ['GET', 'HEAD'],
-            'view' => ['GET', 'HEAD'],
             'create' => ['POST'],
+            'view' => ['GET', 'HEAD'],
+            'index' => ['GET', 'HEAD'],
             'update' => ['PUT', 'PATCH'],
-            'delete' => ['DELETE'],
+            'delete' => ['DELETE']
         ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function authMethods(): array
+    {
+        return [];
     }
 
     /**
@@ -127,11 +187,9 @@ class ActiveController extends Controller
      * If the user does not have access, a [[ForbiddenHttpException]] should be thrown.
      *
      * @param string $action the ID of the action to be executed
-     * @param object $model the model to be accessed. If null, it means no specific model is being accessed.
+     * @param null|object $model the model to be accessed. If null, it means no specific model is being accessed.
      * @param array $params additional parameters
-     * @throws ForbiddenHttpException if the user does not have access
+     * @return void
      */
-    public function checkAccess($action, $model = null, $params = [])
-    {
-    }
+    public function checkAccess(string $action, ?object $model = null, array $params = []): void {}
 }

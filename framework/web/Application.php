@@ -8,7 +8,7 @@
 namespace yii\web;
 
 use Yii;
-use yii\base\InvalidRouteException;
+use yii\base\{InvalidConfigException, InvalidRouteException};
 use yii\helpers\Url;
 
 /**
@@ -25,6 +25,9 @@ use yii\helpers\Url;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class Application extends \yii\base\Application
 {
@@ -32,6 +35,7 @@ class Application extends \yii\base\Application
      * @var string the default route of this application. Defaults to 'site'.
      */
     public $defaultRoute = 'site';
+
     /**
      * @var array the configuration specifying a controller action which should handle
      * all user requests. This is mainly used when the application is in maintenance mode
@@ -51,16 +55,16 @@ class Application extends \yii\base\Application
      * Defaults to null, meaning catch-all is not used.
      */
     public $catchAll;
+
     /**
      * @var Controller the currently active controller instance
      */
     public $controller;
 
-
     /**
      * {@inheritdoc}
      */
-    protected function bootstrap()
+    protected function bootstrap(): void
     {
         $request = $this->getRequest();
         Yii::setAlias('@webroot', dirname($request->getScriptFile()));
@@ -70,9 +74,11 @@ class Application extends \yii\base\Application
     }
 
     /**
-     * Handles the specified request.
+     * Handles the specified request
+     *
      * @param Request $request the request to be handled
      * @return Response the resulting response
+     * @throws InvalidConfigException
      * @throws NotFoundHttpException if the requested route is invalid
      */
     public function handleRequest($request)
@@ -120,8 +126,9 @@ class Application extends \yii\base\Application
 
     /**
      * @return string the homepage URL
+     * @throws InvalidConfigException
      */
-    public function getHomeUrl()
+    public function getHomeUrl(): string
     {
         if ($this->_homeUrl === null) {
             if ($this->getUrlManager()->showScriptName) {
@@ -136,61 +143,87 @@ class Application extends \yii\base\Application
 
     /**
      * @param string $value the homepage URL
+     * @return void
      */
-    public function setHomeUrl($value)
+    public function setHomeUrl(string $value): void
     {
         $this->_homeUrl = $value;
     }
 
     /**
-     * Returns the error handler component.
-     * @return ErrorHandler the error handler application component.
+     * Returns the error handler component
+     *
+     * @return ErrorHandler the error handler application component
+     * @throws InvalidConfigException
      */
-    public function getErrorHandler()
+    public function getErrorHandler(): ErrorHandler
     {
-        return $this->get('errorHandler');
+        /** @var ErrorHandler $errorHandler */
+        $errorHandler = $this->get('errorHandler');
+
+        return $errorHandler;
     }
 
     /**
-     * Returns the request component.
-     * @return Request the request component.
+     * Returns the request component
+     *
+     * @return Request the request component
+     * @throws InvalidConfigException
      */
-    public function getRequest()
+    public function getRequest(): Request
     {
-        return $this->get('request');
+        /** @var Request $request */
+        $request = $this->get('request');
+
+        return $request;
     }
 
     /**
-     * Returns the response component.
-     * @return Response the response component.
+     * Returns the response component
+     *
+     * @return Response the response component
+     * @throws InvalidConfigException
      */
-    public function getResponse()
+    public function getResponse(): Response
     {
-        return $this->get('response');
+        /** @var Response $response */
+        $response = $this->get('response');
+
+        return $response;
     }
 
     /**
-     * Returns the session component.
-     * @return Session the session component.
+     * Returns the session component
+     *
+     * @return Session the session component
+     * @throws InvalidConfigException
      */
-    public function getSession()
+    public function getSession(): Session
     {
-        return $this->get('session');
+        /** @var Session $session */
+        $session = $this->get('session');
+
+        return $session;
     }
 
     /**
-     * Returns the user component.
-     * @return User the user component.
+     * Returns the user component
+     *
+     * @return User the user component
+     * @throws InvalidConfigException
      */
-    public function getUser()
+    public function getUser(): User
     {
-        return $this->get('user');
+        /** @var User $user */
+        $user = $this->get('user');
+
+        return $user;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function coreComponents()
+    public function coreComponents(): array
     {
         return array_merge(parent::coreComponents(), [
             'request' => ['class' => 'yii\web\Request'],

@@ -8,80 +8,98 @@
 namespace yii\base;
 
 use Yii;
+use yii\caching\CacheInterface;
+use yii\db\Connection;
+use yii\i18n\{Formatter, I18N};
+use yii\log\Dispatcher;
+use yii\mail\MailerInterface;
+use yii\rbac\ManagerInterface;
+use yii\web\{AssetManager, UrlManager};
 
 /**
  * Application is the base class for all application classes.
  *
  * For more details and usage information on Application, see the [guide article on applications](guide:structure-applications).
  *
- * @property \yii\web\AssetManager $assetManager The asset manager application component. This property is
+ * @property \yii\web\AssetManager $assetManager the asset manager application component. This property is
  * read-only.
- * @property \yii\rbac\ManagerInterface $authManager The auth manager application component. Null is returned
+ * @property \yii\rbac\ManagerInterface $authManager the auth manager application component. Null is returned
  * if auth manager is not configured. This property is read-only.
- * @property string $basePath The root directory of the application.
- * @property \yii\caching\CacheInterface $cache The cache application component. Null if the component is not
+ * @property string $basePath the root directory of the application
+ * @property \yii\caching\CacheInterface $cache the cache application component. Null if the component is not
  * enabled. This property is read-only.
- * @property array $container Values given in terms of name-value pairs. This property is write-only.
- * @property \yii\db\Connection $db The database connection. This property is read-only.
- * @property \yii\web\ErrorHandler|\yii\console\ErrorHandler $errorHandler The error handler application
+ * @property array $container values given in terms of name-value pairs. This property is write-only.
+ * @property \yii\db\Connection $db the database connection. This property is read-only.
+ * @property \yii\web\ErrorHandler|\yii\console\ErrorHandler $errorHandler the error handler application
  * component. This property is read-only.
- * @property \yii\i18n\Formatter $formatter The formatter application component. This property is read-only.
- * @property \yii\i18n\I18N $i18n The internationalization application component. This property is read-only.
- * @property \yii\log\Dispatcher $log The log dispatcher application component. This property is read-only.
- * @property \yii\mail\MailerInterface $mailer The mailer application component. This property is read-only.
- * @property \yii\web\Request|\yii\console\Request $request The request component. This property is read-only.
- * @property \yii\web\Response|\yii\console\Response $response The response component. This property is
+ * @property \yii\i18n\Formatter $formatter the formatter application component. This property is read-only.
+ * @property \yii\i18n\I18N $i18n the internationalization application component. This property is read-only.
+ * @property \yii\log\Dispatcher $log the log dispatcher application component. This property is read-only.
+ * @property \yii\mail\MailerInterface $mailer the mailer application component. This property is read-only.
+ * @property \yii\web\Request|\yii\console\Request $request the request component. This property is read-only.
+ * @property \yii\web\Response|\yii\console\Response $response the response component. This property is
  * read-only.
- * @property string $runtimePath The directory that stores runtime files. Defaults to the "runtime"
+ * @property string $runtimePath the directory that stores runtime files. Defaults to the "runtime"
  * subdirectory under [[basePath]].
- * @property \yii\base\Security $security The security application component. This property is read-only.
- * @property string $timeZone The time zone used by this application.
- * @property string $uniqueId The unique ID of the module. This property is read-only.
- * @property \yii\web\UrlManager $urlManager The URL manager for this application. This property is read-only.
- * @property string $vendorPath The directory that stores vendor files. Defaults to "vendor" directory under
+ * @property \yii\base\Security $security the security application component. This property is read-only.
+ * @property string $timeZone the time zone used by this application
+ * @property string $uniqueId the unique ID of the module. This property is read-only.
+ * @property \yii\web\UrlManager $urlManager the URL manager for this application. This property is read-only.
+ * @property string $vendorPath the directory that stores vendor files. Defaults to "vendor" directory under
  * [[basePath]].
- * @property View|\yii\web\View $view The view application component that is used to render various view
+ * @property View|\yii\web\View $view the view application component that is used to render various view
  * files. This property is read-only.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 abstract class Application extends Module
 {
     /**
-     * @event Event an event raised before the application starts to handle a request.
+     * @event Event an event raised before the application starts to handle a request
      */
     const EVENT_BEFORE_REQUEST = 'beforeRequest';
+
     /**
-     * @event Event an event raised after the application successfully handles a request (before the response is sent out).
+     * @event Event an event raised after the application successfully handles a request (before the response is sent out)
      */
     const EVENT_AFTER_REQUEST = 'afterRequest';
+
     /**
-     * Application state used by [[state]]: application just started.
+     * Application state used by [[state]]: application just started
      */
     const STATE_BEGIN = 0;
+
     /**
-     * Application state used by [[state]]: application is initializing.
+     * Application state used by [[state]]: application is initializing
      */
     const STATE_INIT = 1;
+
     /**
-     * Application state used by [[state]]: application is triggering [[EVENT_BEFORE_REQUEST]].
+     * Application state used by [[state]]: application is triggering [[EVENT_BEFORE_REQUEST]]
      */
     const STATE_BEFORE_REQUEST = 2;
+
     /**
-     * Application state used by [[state]]: application is handling the request.
+     * Application state used by [[state]]: application is handling the request
      */
     const STATE_HANDLING_REQUEST = 3;
+
     /**
-     * Application state used by [[state]]: application is triggering [[EVENT_AFTER_REQUEST]]..
+     * Application state used by [[state]]: application is triggering [[EVENT_AFTER_REQUEST]]
      */
     const STATE_AFTER_REQUEST = 4;
+
     /**
-     * Application state used by [[state]]: application is about to send response.
+     * Application state used by [[state]]: application is about to send response
      */
     const STATE_SENDING_RESPONSE = 5;
+
     /**
-     * Application state used by [[state]]: application has ended.
+     * Application state used by [[state]]: application has ended
      */
     const STATE_END = 6;
 
@@ -93,14 +111,26 @@ abstract class Application extends Module
      * Please refer to the [guide about class autoloading](guide:concept-autoloading.md) for more details.
      */
     public $controllerNamespace = 'app\\controllers';
+
     /**
-     * @var string the application name.
+     * @var string the namespace that model classes are located in.
+     * This namespace will be used to load model classes by prepending it to the model class name.
+     * The default namespace is `app\models`.
+     *
+     * Please refer to the [guide about class autoloading](guide:concept-autoloading.md) for more details.
+     */
+    public $modelNamespace = 'app\\models';
+
+    /**
+     * @var string the application name
      */
     public $name = 'My Application';
+
     /**
-     * @var string the charset currently used for the application.
+     * @var string the charset currently used for the application
      */
     public $charset = 'UTF-8';
+
     /**
      * @var string the language that is meant to be used for end users. It is recommended that you
      * use [IETF language tags](http://en.wikipedia.org/wiki/IETF_language_tag). For example, `en` stands
@@ -108,33 +138,40 @@ abstract class Application extends Module
      * @see sourceLanguage
      */
     public $language = 'en-US';
+
     /**
      * @var string the language that the application is written in. This mainly refers to
      * the language that the messages and view files are written in.
      * @see language
      */
     public $sourceLanguage = 'en-US';
+
     /**
      * @var Controller the currently active controller instance
      */
     public $controller;
+
     /**
      * @var string|bool the layout that should be applied for views in this application. Defaults to 'main'.
      * If this is false, layout will be disabled.
      */
     public $layout = 'main';
+
     /**
      * @var string the requested route
      */
     public $requestedRoute;
+
     /**
      * @var Action the requested Action. If null, it means the request cannot be resolved into an action.
      */
     public $requestedAction;
+
     /**
-     * @var array the parameters supplied to the requested action.
+     * @var array the parameters supplied to the requested action
      */
     public $requestedParams;
+
     /**
      * @var array list of installed Yii extensions. Each array element represents a single extension
      * with the following structure:
@@ -159,6 +196,7 @@ abstract class Application extends Module
      * `@vendor/yiisoft/extensions.php`.
      */
     public $extensions;
+
     /**
      * @var array list of components that should be run during the application [[bootstrap()|bootstrapping process]].
      *
@@ -175,24 +213,27 @@ abstract class Application extends Module
      * will be also be called.
      */
     public $bootstrap = [];
+
     /**
      * @var int the current application state during a request handling life cycle.
      * This property is managed by the application. Do not modify this property.
      */
     public $state;
+
     /**
-     * @var array list of loaded modules indexed by their class names.
+     * @var array list of loaded modules indexed by their class names
      */
     public $loadedModules = [];
 
-
     /**
      * Constructor.
+     *
      * @param array $config name-value pairs that will be used to initialize the object properties.
      * Note that the configuration must contain both [[id]] and [[basePath]].
-     * @throws InvalidConfigException if either [[id]] or [[basePath]] configuration is missing.
+     * @throws \ReflectionException
+     * @throws InvalidConfigException if either [[id]] or [[basePath]] configuration is missing
      */
-    public function __construct($config = [])
+    public function __construct(array $config = [])
     {
         Yii::$app = $this;
         static::setInstance($this);
@@ -211,10 +252,13 @@ abstract class Application extends Module
      * This method is called at the beginning of the application constructor.
      * It initializes several important application properties.
      * If you override this method, please make sure you call the parent implementation.
+     *
      * @param array $config the application configuration
-     * @throws InvalidConfigException if either [[id]] or [[basePath]] configuration is missing.
+     * @return void
+     * @throws \ReflectionException
+     * @throws InvalidConfigException if either [[id]] or [[basePath]] configuration is missing
      */
-    public function preInit(&$config)
+    public function preInit(array &$config): void
     {
         if (!isset($config['id'])) {
             throw new InvalidConfigException('The "id" configuration for the Application is required.');
@@ -266,8 +310,11 @@ abstract class Application extends Module
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
+     * @throws InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
         $this->state = self::STATE_INIT;
         $this->bootstrap();
@@ -277,8 +324,11 @@ abstract class Application extends Module
      * Initializes extensions and executes bootstrap components.
      * This method is called by [[init()]] after the application has been fully configured.
      * If you override this method, make sure you also call the parent implementation.
+     *
+     * @return void
+     * @throws InvalidConfigException
      */
-    protected function bootstrap()
+    protected function bootstrap(): void
     {
         if ($this->extensions === null) {
             $file = Yii::getAlias('@vendor/yiisoft/extensions.php');
@@ -332,10 +382,13 @@ abstract class Application extends Module
     }
 
     /**
-     * Registers the errorHandler component as a PHP error handler.
+     * Registers the errorHandler component as a PHP error handler
+     *
      * @param array $config application config
+     * @return void
+     * @throws InvalidConfigException
      */
-    protected function registerErrorHandler(&$config)
+    protected function registerErrorHandler(array &$config): void
     {
         if (YII_ENABLE_ERROR_HANDLER) {
             if (!isset($config['components']['errorHandler']['class'])) {
@@ -351,9 +404,10 @@ abstract class Application extends Module
     /**
      * Returns an ID that uniquely identifies this module among all modules within the current application.
      * Since this is an application instance, it will always return an empty string.
-     * @return string the unique ID of the module.
+     *
+     * @return string the unique ID of the module
      */
-    public function getUniqueId()
+    public function getUniqueId(): string
     {
         return '';
     }
@@ -361,11 +415,13 @@ abstract class Application extends Module
     /**
      * Sets the root directory of the application and the @app alias.
      * This method can only be invoked at the beginning of the constructor.
+     *
      * @param string $path the root directory of the application.
-     * @property string the root directory of the application.
-     * @throws InvalidArgumentException if the directory does not exist.
+     * @return void
+     * @throws \ReflectionException
+     * @throws InvalidArgumentException if the directory does not exist
      */
-    public function setBasePath($path)
+    public function setBasePath($path): void
     {
         parent::setBasePath($path);
         Yii::setAlias('@app', $this->getBasePath());
@@ -374,9 +430,12 @@ abstract class Application extends Module
     /**
      * Runs the application.
      * This is the main entrance of an application.
-     * @return int the exit status (0 means normal, non-zero values mean abnormal)
+     *
+     * @return int|null the exit status (0 means normal, non-zero values mean abnormal)
+     * @throws Exception
+     * @throws ExitException
      */
-    public function run()
+    public function run(): ?int
     {
         try {
             $this->state = self::STATE_BEFORE_REQUEST;
@@ -394,8 +453,11 @@ abstract class Application extends Module
             $this->state = self::STATE_END;
 
             return $response->exitStatus;
-        } catch (ExitException $e) {
-            $this->end($e->statusCode, isset($response) ? $response : null);
+        } catch (Exception $e) {
+            if (!$e instanceof ExitException)
+                throw $e;
+
+            $this->end($e->statusCode, $response ?? null);
             return $e->statusCode;
         }
     }
@@ -415,10 +477,12 @@ abstract class Application extends Module
 
     /**
      * Returns the directory that stores runtime files.
+     *
      * @return string the directory that stores runtime files.
      * Defaults to the "runtime" subdirectory under [[basePath]].
+     * @throws \ReflectionException
      */
-    public function getRuntimePath()
+    public function getRuntimePath(): string
     {
         if ($this->_runtimePath === null) {
             $this->setRuntimePath($this->getBasePath() . DIRECTORY_SEPARATOR . 'runtime');
@@ -428,10 +492,12 @@ abstract class Application extends Module
     }
 
     /**
-     * Sets the directory that stores runtime files.
-     * @param string $path the directory that stores runtime files.
+     * Sets the directory that stores runtime files
+     *
+     * @param string $path the directory that stores runtime files
+     * @return void
      */
-    public function setRuntimePath($path)
+    public function setRuntimePath(string $path): void
     {
         $this->_runtimePath = Yii::getAlias($path);
         Yii::setAlias('@runtime', $this->_runtimePath);
@@ -440,11 +506,13 @@ abstract class Application extends Module
     private $_vendorPath;
 
     /**
-     * Returns the directory that stores vendor files.
+     * Returns the directory that stores vendor files
+     *
      * @return string the directory that stores vendor files.
      * Defaults to "vendor" directory under [[basePath]].
+     * @throws \ReflectionException
      */
-    public function getVendorPath()
+    public function getVendorPath(): string
     {
         if ($this->_vendorPath === null) {
             $this->setVendorPath($this->getBasePath() . DIRECTORY_SEPARATOR . 'vendor');
@@ -454,10 +522,12 @@ abstract class Application extends Module
     }
 
     /**
-     * Sets the directory that stores vendor files.
-     * @param string $path the directory that stores vendor files.
+     * Sets the directory that stores vendor files
+     *
+     * @param string $path the directory that stores vendor files
+     * @return void
      */
-    public function setVendorPath($path)
+    public function setVendorPath(string $path): void
     {
         $this->_vendorPath = Yii::getAlias($path);
         Yii::setAlias('@vendor', $this->_vendorPath);
@@ -470,10 +540,11 @@ abstract class Application extends Module
      * This is a simple wrapper of PHP function date_default_timezone_get().
      * If time zone is not configured in php.ini or application config,
      * it will be set to UTC by default.
-     * @return string the time zone used by this application.
+     *
+     * @return string the time zone used by this application
      * @see http://php.net/manual/en/function.date-default-timezone-get.php
      */
-    public function getTimeZone()
+    public function getTimeZone(): string
     {
         return date_default_timezone_get();
     }
@@ -482,146 +553,220 @@ abstract class Application extends Module
      * Sets the time zone used by this application.
      * This is a simple wrapper of PHP function date_default_timezone_set().
      * Refer to the [php manual](http://www.php.net/manual/en/timezones.php) for available timezones.
-     * @param string $value the time zone used by this application.
+     *
+     * @param string $value the time zone used by this application
+     * @return void
      * @see http://php.net/manual/en/function.date-default-timezone-set.php
      */
-    public function setTimeZone($value)
+    public function setTimeZone(string $value): void
     {
         date_default_timezone_set($value);
     }
 
     /**
-     * Returns the database connection component.
-     * @return \yii\db\Connection the database connection.
+     * Returns the database connection component
+     *
+     * @return Connection the database connection
+     * @throws InvalidConfigException
      */
-    public function getDb()
+    public function getDb(): Connection
     {
-        return $this->get('db');
+        /** @var Connection $db */
+        $db = $this->get('db');
+
+        return $db;
     }
 
     /**
-     * Returns the log dispatcher component.
-     * @return \yii\log\Dispatcher the log dispatcher application component.
+     * Returns the log dispatcher component
+     *
+     * @return Dispatcher the log dispatcher application component
+     * @throws InvalidConfigException
      */
-    public function getLog()
+    public function getLog(): Dispatcher
     {
-        return $this->get('log');
+        /** @var Dispatcher $log */
+        $log = $this->get('log');
+
+        return $log;
     }
 
     /**
-     * Returns the error handler component.
-     * @return \yii\web\ErrorHandler|\yii\console\ErrorHandler the error handler application component.
+     * Returns the error handler component
+     *
+     * @return \yii\web\ErrorHandler|\yii\console\ErrorHandler the error handler application component
+     * @throws InvalidConfigException
      */
     public function getErrorHandler()
     {
-        return $this->get('errorHandler');
+        /** @var \yii\web\ErrorHandler|\yii\console\ErrorHandler $errorHandler */
+        $errorHandler = $this->get('errorHandler');
+
+        return $errorHandler;
     }
 
     /**
-     * Returns the cache component.
-     * @return \yii\caching\CacheInterface the cache application component. Null if the component is not enabled.
+     * Returns the cache component
+     *
+     * @return CacheInterface the cache application component. Null if the component is not enabled
+     * @throws InvalidConfigException
      */
-    public function getCache()
+    public function getCache(): CacheInterface
     {
-        return $this->get('cache', false);
+        /** @var CacheInterface $cache */
+        $cache = $this->get('cache', false);
+
+        return $cache;
     }
 
     /**
-     * Returns the formatter component.
-     * @return \yii\i18n\Formatter the formatter application component.
+     * Returns the formatter component
+     *
+     * @return Formatter the formatter application component
+     * @throws InvalidConfigException
      */
-    public function getFormatter()
+    public function getFormatter(): Formatter
     {
-        return $this->get('formatter');
+        /** @var Formatter $formatter */
+        $formatter = $this->get('formatter');
+
+        return $formatter;
     }
 
     /**
-     * Returns the request component.
-     * @return \yii\web\Request|\yii\console\Request the request component.
+     * Returns the request component
+     *
+     * @return \yii\web\Request|\yii\console\Request the request component
+     * @throws InvalidConfigException
      */
     public function getRequest()
     {
-        return $this->get('request');
+        /** @var \yii\web\Request|\yii\console\Request $request */
+        $request = $this->get('request');
+
+        return $request;
     }
 
     /**
-     * Returns the response component.
-     * @return \yii\web\Response|\yii\console\Response the response component.
+     * Returns the response component
+     *
+     * @return \yii\web\Response|\yii\console\Response the response component
+     * @throws InvalidConfigException
      */
     public function getResponse()
     {
-        return $this->get('response');
+        /** @var \yii\web\Response|\yii\console\Response $response */
+        $response = $this->get('response');
+
+        return $response;
     }
 
     /**
-     * Returns the view object.
-     * @return View|\yii\web\View the view application component that is used to render various view files.
+     * Returns the view object
+     *
+     * @return View|\yii\web\View the view application component that is used to render various view files
+     * @throws InvalidConfigException
      */
-    public function getView()
+    public function getView(): View
     {
-        return $this->get('view');
+        /** @var View|\yii\web\View $view */
+        $view = $this->get('view');
+
+        return $view;
     }
 
     /**
-     * Returns the URL manager for this application.
-     * @return \yii\web\UrlManager the URL manager for this application.
+     * Returns the URL manager for this application
+     *
+     * @return UrlManager the URL manager for this application
+     * @throws InvalidConfigException
      */
-    public function getUrlManager()
+    public function getUrlManager(): UrlManager
     {
-        return $this->get('urlManager');
+        /** @var UrlManager $urlManager */
+        $urlManager = $this->get('urlManager');
+
+        return $urlManager;
     }
 
     /**
-     * Returns the internationalization (i18n) component.
-     * @return \yii\i18n\I18N the internationalization application component.
+     * Returns the internationalization (i18n) component
+     *
+     * @return I18N the internationalization application component
+     * @throws InvalidConfigException
      */
-    public function getI18n()
+    public function getI18n(): I18N
     {
-        return $this->get('i18n');
+        /** @var I18N $i18n */
+        $i18n = $this->get('i18n');
+
+        return $i18n;
     }
 
     /**
-     * Returns the mailer component.
-     * @return \yii\mail\MailerInterface the mailer application component.
+     * Returns the mailer component
+     *
+     * @return MailerInterface the mailer application component
+     * @throws InvalidConfigException
      */
-    public function getMailer()
+    public function getMailer(): MailerInterface
     {
-        return $this->get('mailer');
+        /** @var MailerInterface $mailer */
+        $mailer = $this->get('mailer');
+
+        return $mailer;
     }
 
     /**
-     * Returns the auth manager for this application.
-     * @return \yii\rbac\ManagerInterface the auth manager application component.
+     * Returns the auth manager for this application
+     *
+     * @return ManagerInterface the auth manager application component.
      * Null is returned if auth manager is not configured.
+     * @throws InvalidConfigException
      */
-    public function getAuthManager()
+    public function getAuthManager(): ManagerInterface
     {
-        return $this->get('authManager', false);
+        /** @var ManagerInterface $authManager */
+        $authManager = $this->get('authManager', false);
+
+        return $authManager;
     }
 
     /**
-     * Returns the asset manager.
-     * @return \yii\web\AssetManager the asset manager application component.
+     * Returns the asset manager
+     *
+     * @return AssetManager the asset manager application component
+     * @throws InvalidConfigException
      */
-    public function getAssetManager()
+    public function getAssetManager(): AssetManager
     {
-        return $this->get('assetManager');
+        /** @var AssetManager $assetManager */
+        $assetManager = $this->get('assetManager');
+
+        return $assetManager;
     }
 
     /**
-     * Returns the security component.
-     * @return \yii\base\Security the security application component.
+     * Returns the security component
+     *
+     * @return Security the security application component
+     * @throws InvalidConfigException
      */
-    public function getSecurity()
+    public function getSecurity(): Security
     {
-        return $this->get('security');
+        /** @var Security $security */
+        $security = $this->get('security');
+
+        return $security;
     }
 
     /**
-     * Returns the configuration of core application components.
+     * Returns the configuration of core application components
+     *
+     * @return array
      * @see set()
      */
-    public function coreComponents()
+    public function coreComponents(): array
     {
         return [
             'log' => ['class' => 'yii\log\Dispatcher'],
@@ -639,11 +784,14 @@ abstract class Application extends Module
      * Terminates the application.
      * This method replaces the `exit()` function by ensuring the application life cycle is completed
      * before terminating the application.
-     * @param int $status the exit status (value 0 means normal exit while other values mean abnormal exit).
-     * @param Response $response the response to be sent. If not set, the default application [[response]] component will be used.
+     *
+     * @param int $status the exit status (value 0 means normal exit while other values mean abnormal exit)
+     * @param null|Response $response the response to be sent. If not set, the default application [[response]] component will be used.
+     * @return void
      * @throws ExitException if the application is in testing mode
+     * @throws InvalidConfigException
      */
-    public function end($status = 0, $response = null)
+    public function end(int $status = 0, ?Response $response = null): void
     {
         if ($this->state === self::STATE_BEFORE_REQUEST || $this->state === self::STATE_HANDLING_REQUEST) {
             $this->state = self::STATE_AFTER_REQUEST;
@@ -664,12 +812,13 @@ abstract class Application extends Module
     }
 
     /**
-     * Configures [[Yii::$container]] with the $config.
+     * Configures [[Yii::$container]] with the $config
      *
      * @param array $config values given in terms of name-value pairs
+     * @return void
      * @since 2.0.11
      */
-    public function setContainer($config)
+    public function setContainer(array $config): void
     {
         Yii::configure(Yii::$container, $config);
     }

@@ -8,7 +8,7 @@
 namespace yii\base;
 
 use Yii;
-use yii\helpers\StringHelper;
+use yii\helpers\{Inflector, StringHelper};
 
 /**
  * Component is the base class that implements the *property*, *event* and *behavior* features.
@@ -133,7 +133,7 @@ class Component extends BaseObject
      */
     public function __get($name)
     {
-        $getter = 'get' . $name;
+        $getter = 'get' . Inflector::camelize($name);
         if (method_exists($this, $getter)) {
             // read property, e.g. getName()
             return $this->$getter();
@@ -174,7 +174,7 @@ class Component extends BaseObject
      */
     public function __set($name, $value)
     {
-        $setter = 'set' . $name;
+        $setter = 'set' . Inflector::camelize($name);
         if (method_exists($this, $setter)) {
             // set property
             $this->$setter($value);
@@ -258,7 +258,7 @@ class Component extends BaseObject
      */
     public function __unset($name)
     {
-        $setter = 'set' . $name;
+        $setter = 'set' . Inflector::camelize($name);
         if (method_exists($this, $setter)) {
             $this->$setter(null);
             return;
