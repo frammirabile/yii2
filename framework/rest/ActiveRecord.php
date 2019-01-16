@@ -30,6 +30,11 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     const SCENARIO_UPDATE = 'update';
 
     /**
+     * @var bool
+     */
+    protected $isUpdateable = true;
+
+    /**
      * @var array
      */
     private $_dependencies = [];
@@ -97,11 +102,11 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
                 $this->_related[$name] = $value;
             elseif ($multiple)
                 $this->_related[$name] = array_map(function($data) use($class) {
-                    return new $class(['attributes' => $data]);
+                    return new $class(['scenario' => self::SCENARIO_CREATE, 'attributes' => $data]);
                 }, $value);
             else {
                 if (!isset($this->_related[$name]))
-                    $this->_related[$name] = $this->isNewRecord ? new $class : $this->$name;
+                    $this->_related[$name] = $this->isNewRecord ? new $class(['scenario' => self::SCENARIO_CREATE]) : $this->$name;
 
                 $this->_related[$name]->load($value, '');
             }
@@ -192,6 +197,14 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     public function transactions(): array
     {
         return [self::SCENARIO_CREATE => self::OP_INSERT];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function beforeSave($insert): bool
+    {
+        return parent::beforeSave($insert) && ($insert || $this->isUpdateable);
     }
 
     /**
