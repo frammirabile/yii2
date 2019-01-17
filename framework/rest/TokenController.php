@@ -6,8 +6,7 @@
 
 namespace yii\rest;
 
-use yii\filters\auth\HttpBasicAuth;
-use yii\filters\auth\HttpOAuth2Auth;
+use yii\filters\auth\HttpOAuth2;
 use yii\web\{BadRequestHttpException, ServerErrorHttpException};
 
 /**
