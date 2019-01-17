@@ -30,9 +30,9 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     const SCENARIO_UPDATE = 'update';
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    protected $isUpdateable = true;
+    protected $savingNotAllowed;
 
     /**
      * @var array
@@ -204,7 +204,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      */
     public function beforeSave($insert): bool
     {
-        return parent::beforeSave($insert) && ($insert || $this->isUpdateable);
+        return parent::beforeSave($insert) && ($this->savingNotAllowed === null || !$this->savingNotAllowed && $insert);
     }
 
     /**
