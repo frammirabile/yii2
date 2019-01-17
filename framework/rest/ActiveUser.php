@@ -15,7 +15,6 @@ use yii\validators\PasswordValidator;
  *
  * @property-read int $id
  * @property string $username
- * @property-write string $password
  * @property-read string $reset_password
  * @property string $email
  * @property-write bool $active
@@ -28,21 +27,6 @@ use yii\validators\PasswordValidator;
  */
 class ActiveUser extends ActiveRecord implements IdentityInterface
 {
-    /**
-     * The name of scenario for updating current user
-     */
-    const SCENARIO_UPDATE_ME = 'updateMe';
-
-    /**
-     * The name of scenario for activating current user
-     */
-    const SCENARIO_ACTIVATE_ME = 'activateMe';
-
-    /**
-     * The name of scenario for resetting password
-     */
-    const SCENARIO_RESET_PASSWORD = 'resetPassword';
-
     /**
      * {@inheritdoc}
      */
@@ -162,7 +146,7 @@ class ActiveUser extends ActiveRecord implements IdentityInterface
      */
     public function setPassword(string $password): void
     {
-        $this->password = \Yii::$app->security->generatePasswordHash($password);
+        $this->setAttribute('password', \Yii::$app->security->generatePasswordHash($password));
         $this->reset_password = \Yii::$app->security->generateRandomInteger();
     }
 
@@ -171,7 +155,7 @@ class ActiveUser extends ActiveRecord implements IdentityInterface
      */
     public function validatePassword(string $password): bool
     {
-        return \Yii::$app->security->validatePassword($password, $this->password);
+        return \Yii::$app->security->validatePassword($password, $this->getAttribute('password'));
     }
 
     /**

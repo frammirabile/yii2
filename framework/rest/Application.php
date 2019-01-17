@@ -10,6 +10,10 @@ use yii\helpers\{ArrayHelper, UnsetArrayValue};
 
 /**
  * {@inheritdoc}
+ * @property-read Request $request
+ * @property-read Response $response
+ * @property-read null $session
+ * @property-read User $user
  */
 class Application extends \yii\web\Application
 {

@@ -37,6 +37,11 @@ class Request extends \yii\web\Request
     public $parsers = ['*/*' => 'yii\web\JsonParser'];
 
     /**
+     * @var Client
+     */
+    public $client;
+
+    /**
      * @var bool whether to underscore keys
      */
     public $underscoreKeys = true;

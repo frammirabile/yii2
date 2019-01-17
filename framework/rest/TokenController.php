@@ -7,6 +7,7 @@
 namespace yii\rest;
 
 use yii\filters\auth\HttpBasicAuth;
+use yii\filters\auth\HttpOAuth2Auth;
 use yii\web\{BadRequestHttpException, ServerErrorHttpException};
 
 /**
@@ -47,9 +48,7 @@ class TokenController extends ActiveController
      */
     protected function authMethods(): array
     {
-       return ['class' => HttpBasicAuth::class];
-
-        #tbd auth per autenticazione del client
+       return ['class' => HttpOAuth2::class];
     }
 
     /**
