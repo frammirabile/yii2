@@ -4,9 +4,9 @@
  * @copyright Copyright (c) 2018 Francesco Ammirabile <frammirabile@gmail.com>
  */
 
-namespace yii\filters\auth;
+namespace yii\rest;
 
-use yii\rest\Client;
+use yii\filters\auth\HttpBasicAuth;
 
 /**
  * OAuth2 authentication
@@ -24,7 +24,10 @@ class HttpOAuth2 extends HttpBasicAuth
     public function init(): void
     {
         $this->auth = function(string $id, string $secret): ?bool {
-            return (\Yii::$app->request->client = Client::findOne(['id' => $id, 'secret' => $secret])) === null ? null : false;
+            if ((\Yii::$app->request->client = Client::findOne(['id' => $id, 'secret' => $secret])) === null)
+                return null;
+
+            $request = \Yii::$app->request->getBodyParams();
         };
     }
 }

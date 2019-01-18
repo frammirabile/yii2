@@ -60,7 +60,7 @@ class TokenController extends ActiveController
         $request = \Yii::$app->request->bodyParams;
 
         if (!isset($request['grant_type']))
-            throw new BadRequestHttpException(\Yii::t('api', 'Invalid request'), 1); #tbd sistemare traduzioni
+            throw new BadRequestHttpException(\Yii::t('api', 'Invalid request'), 1);
 
         switch ($request['grant_type']) {
             case 'password':

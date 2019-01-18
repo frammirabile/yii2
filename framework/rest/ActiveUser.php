@@ -94,9 +94,7 @@ class ActiveUser extends ActiveRecord implements IdentityInterface
     {
         return [
             self::SCENARIO_CREATE => ['username', 'password', 'email'],
-            self::SCENARIO_UPDATE_ME => ['password', 'email'],
-            self::SCENARIO_ACTIVATE_ME => ['active'],
-            self::SCENARIO_RESET_PASSWORD => ['password']
+            self::SCENARIO_UPDATE => ['']
         ];
     }
 
@@ -136,7 +134,7 @@ class ActiveUser extends ActiveRecord implements IdentityInterface
      */
     public function getUsername(): string
     {
-        return $this->username;
+        return $this->hasAttribute('username') ? $this->username : $this->email;
     }
 
     /**

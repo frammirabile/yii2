@@ -8,8 +8,8 @@
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
-use yii\db\{ActiveQueryInterface, ActiveRecordInterface};
-use yii\helpers\{Inflector, StringHelper};
+use yii\db\ActiveRecordInterface;
+use yii\helpers\Inflector;
 use yii\web\NotFoundHttpException;
 
 /**
