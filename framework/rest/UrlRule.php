@@ -113,8 +113,7 @@ class UrlRule extends CompositeUrlRule
      * @see patterns
      */
     public $tokens = [
-        '{id}' => '<id:\d+>',
-        '{ids}' => '<id:\d[\d,]*>',
+        '{id}' => '<id:\d[\d,]*>',
         '{email}' => '<email:[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}>'
     ];
 
