@@ -8,7 +8,7 @@ namespace yii\rest;
 
 use yii\base\{ActionEvent, InvalidConfigException};
 use yii\db\ActiveRecordInterface;
-use yii\filters\auth\{CompositeAuth, HttpBearerAuth, HttpHeaderAuth, QueryParamAuth};
+use yii\filters\auth\{CompositeAuth, HttpBasicAuth, HttpBearerAuth, QueryParamAuth};
 use yii\helpers\Inflector;
 use yii\web\NotFoundHttpException;
 
@@ -175,17 +175,36 @@ class UserController extends ActiveController
                 'bearer' => [
                     'class' => HttpBearerAuth::class,
                     'only' => ['*-me']
-                ],
+                ]/* tbd,
                 'header' => [
-                    'class' => HttpHeaderAuth::class,
+                    'class' => HttpBasicAuth::class,
                     'only' => ['create', 'init-password-refresh', 'update-password']
                 ],
                 'query' => [
                     'class' => QueryParamAuth::class,
                     'only' => ['activate']
-                ]
+                ]*/
             ]
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     * @throws InvalidConfigException
+     * @throws NotFoundHttpException
+     * @throws ServerErrorHttpException
+     *
+     * @tdb
+     */
+    public function actionInitPasswordReset(string $username): void
+    {
+        /** @var IdentityInterface $userClass */
+        $userClass = $this->modelClass;
+
+        if (($user = $userClass::findByUsername($username)) === null)
+            throw new NotFoundHttpException;
+
+        MailHelper::sendHtmlMail('resetPassword', \Yii::t('api', 'Reset your password'), 'support-noreplay', $user->getEmail(), ['user' => $user]);
     }
 
     /**
@@ -193,4 +212,7 @@ class UserController extends ActiveController
      * @return void
      */
     protected function afterActivation(ActionEvent $event): void {}
+
+    #$this->redirect('https://www.'.Url::domain().'/verification?l='.\Yii::$app->request->get('lang', \Yii::$app->language).'&r='.intval($event->result->hasErrors()));
+
 }

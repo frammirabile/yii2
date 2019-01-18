@@ -74,7 +74,8 @@ abstract class ActiveController extends Controller
     {
         return ArrayHelper::merge(parent::behaviors(), [
             'contentNegotiator' => [
-                'formats' => ['text/plain' => Response::FORMAT_RAW]
+                'formats' => ['text/plain' => Response::FORMAT_RAW],
+                'languages' => \Yii::$app->params['languages']
             ],
             'authenticator' => new UnsetArrayValue,
             [
@@ -176,7 +177,7 @@ abstract class ActiveController extends Controller
      */
     protected function authMethods(): array
     {
-        return [];
+        return ['class' => HttpBearerAuth::class];
     }
 
     /**
