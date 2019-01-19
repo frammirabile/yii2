@@ -106,7 +106,7 @@ class User extends \yii\web\User
         /** @var IdentityInterface $identityClass */
         $identityClass = $this->identityClass;
 
-        return ($this->_token = $tokenClass::findByRefreshToken($token)) !== null && ($identity = $identityClass::findIdentityByAccessToken($this->_token)) !== null && $this->login($identity);
+        return ($this->_token = $tokenClass::findByRefresh($token)) !== null && ($identity = $identityClass::findIdentityByAccessToken($this->_token)) !== null && $this->login($identity);
     }
 
     /**
@@ -173,16 +173,6 @@ class User extends \yii\web\User
     public function getIsGuest(): bool
     {
         return $this->getIdentity() === false;
-    }
-
-    /**
-     * Returns whether the user is an administrator
-     *
-     * @return bool whether the user is an administrator
-     */
-    public function getIsAdmin(): bool
-    {
-        return $this->_identity instanceof AdminInterface;
     }
 
     /**
