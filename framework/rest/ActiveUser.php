@@ -16,7 +16,6 @@ use yii\validators\PasswordValidator;
  * @property-read int $id
  * @property string $username
  * @property-read string $reset_password
- * @property string $email
  * @property-write bool $active
  * @property-read bool $isActive
  * @property-read int $created_at
