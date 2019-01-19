@@ -44,9 +44,9 @@ interface TokenInterface
     public function __toString(): string;
 
     /**
-     * Returns the user's ID
+     * Returns the user ID
      *
-     * @return int the user's ID
+     * @return int the user ID
      */
     public function getUserId(): int;
 

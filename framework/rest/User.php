@@ -24,9 +24,19 @@ use yii\helpers\StringHelper;
 class User extends \yii\web\User
 {
     /**
+     * @var string the model class name
+     */
+    public $modelClass;
+
+    /**
      * @var string the class name of the [[token]] object
      */
     public $tokenClass;
+
+    /**
+     * @var UserInterface
+     */
+    protected $_user;
 
     /**
      * @var IdentityInterface|null|false
@@ -158,9 +168,9 @@ class User extends \yii\web\User
     }
 
     /**
-     * Returns the user's email
+     * Returns the user email
      *
-     * @return string|null the user's email
+     * @return string|null the user email
      */
     public function getEmail(): ?string
     {

@@ -15,6 +15,7 @@ use yii\validators\PasswordValidator;
  *
  * @property-read int $id
  * @property string $username
+ * @property-write string $password
  * @property-read string $reset_password
  * @property-write bool $active
  * @property-read bool $isActive
@@ -24,7 +25,7 @@ use yii\validators\PasswordValidator;
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  */
-class ActiveUser extends ActiveRecord implements IdentityInterface
+class ActiveUser extends ActiveRecord implements UserInterface
 {
     /**
      * {@inheritdoc}
@@ -44,19 +45,19 @@ class ActiveUser extends ActiveRecord implements IdentityInterface
 
     /**
      * {@inheritdoc}
-     * @param TokenInterface $token
      */
-    public static function findIdentityByAccessToken($token, $type = null): ?IdentityInterface
+    public static function findByUsername(string $username): ?IdentityInterface
     {
-        return static::findOne(['id' => $token->getUserId(), 'active' => true]);
+        return self::findOne(['username' => $username, 'isActive' => true]);
     }
 
     /**
      * {@inheritdoc}
+     * @param TokenInterface $token
      */
-    public static function findByUsername(string $username): ?IdentityInterface
+    public static function findIdentityByAccessToken($token, $type = null): ?IdentityInterface
     {
-        return static::findOne(['username' => $username, 'active' => true]);
+        return static::findOne(['id' => $token->getUserId(), 'isActive' => true]);
     }
 
     /**
@@ -152,7 +153,7 @@ class ActiveUser extends ActiveRecord implements IdentityInterface
      */
     public function validatePassword(string $password): bool
     {
-        return \Yii::$app->security->validatePassword($password, $this->getAttribute('password'));
+        return \Yii::$app->security->validatePassword($password, $this->password);
     }
 
     /**
