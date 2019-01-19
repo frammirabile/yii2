@@ -126,7 +126,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function getId(): string
     {
-        return $this->primaryKey;
+        return $this->getPrimaryKey();
     }
 
     /**
@@ -144,8 +144,8 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function setPassword(string $password): void
     {
-        $this->setAttribute('password', \Yii::$app->security->generatePasswordHash($password));
-        $this->reset_password = \Yii::$app->security->generateRandomInteger();
+        $this->setAttribute('password', \Yii::$app->getSecurity()->generatePasswordHash($password));
+        $this->reset_password = \Yii::$app->getSecurity()->generateRandomInteger();
     }
 
     /**
@@ -153,7 +153,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function validatePassword(string $password): bool
     {
-        return \Yii::$app->security->validatePassword($password, $this->password);
+        return \Yii::$app->getSecurity()->validatePassword($password, $this->password);
     }
 
     /**

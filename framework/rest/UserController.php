@@ -30,7 +30,7 @@ class UserController extends ActiveController
      */
     public function actionViewMe(): ?IdentityInterface
     {
-        return \Yii::$app->user->identity;
+        return \Yii::$app->user->getIdentity();
     }
 
     /**
@@ -44,7 +44,7 @@ class UserController extends ActiveController
             'modelClass' => \Yii::$app->user->identityClass,
             'scenario' => $this->updateMeScenario,
             'data' => $this->data
-        ], [$this->id, $this]))->run(\Yii::$app->user->id);
+        ], [$this->id, $this]))->run(\Yii::$app->user->getId());
     }
 
     /**
@@ -56,7 +56,7 @@ class UserController extends ActiveController
         \Yii::createObject([
             'class' => DeleteAction::class,
             'modelClass' => \Yii::$app->user->identityClass,
-        ], [$this->id, $this->controller])->run(\Yii::$app->user->id);
+        ], [$this->id, $this->controller])->run(\Yii::$app->user->getId());
     }
 
     /**
@@ -67,7 +67,7 @@ class UserController extends ActiveController
     {
         return method_exists($this, $getter = 'get'.Inflector::camelize($property))
             ? $this->$getter()
-            : \Yii::$app->user->identity->$property;
+            : \Yii::$app->user->getIdentity()->$property;
     }
 
     /**
@@ -81,8 +81,8 @@ class UserController extends ActiveController
             'class' => UpdateAction::class,
             'modelClass' => \Yii::$app->user->identityClass,
             'scenario' => $this->updateMeScenario,
-            'data' => [$property => \Yii::$app->request->rawBody]
-        ], [$this->id, $this]))->run(\Yii::$app->user->id);
+            'data' => [$property => \Yii::$app->getRequest()->getRawBody()]
+        ], [$this->id, $this]))->run(\Yii::$app->user->getId());
     }
 
     /**
@@ -98,7 +98,7 @@ class UserController extends ActiveController
             'scenario' => ActiveUser::SCENARIO_ACTIVATE_ME,
             'data' => ['active' => 1],
             'on afterRun' => [$this, 'afterActivation']
-        ], [$this->id, $this])->run(\Yii::$app->user->id);
+        ], [$this->id, $this])->run(\Yii::$app->user->getId());
     }
 
     /**
@@ -148,7 +148,7 @@ class UserController extends ActiveController
         if (($user = $userClass::findByUsername($username)) === null)
             throw new NotFoundHttpException;
 
-        $refreshPassword = \Yii::$app->request->get('refresh_password');
+        $refreshPassword = \Yii::$app->getRequest()->get('refresh_password');
 
         if ($refreshPassword === null || $refreshPassword != $user->getResetPassword())
             $user->addError('refresh_password', 'Invalid refresh_password');
@@ -213,6 +213,6 @@ class UserController extends ActiveController
      */
     protected function afterActivation(ActionEvent $event): void {}
 
-    #$this->redirect('https://www.'.Url::domain().'/verification?l='.\Yii::$app->request->get('lang', \Yii::$app->language).'&r='.intval($event->result->hasErrors()));
+    #$this->redirect('https://www.'.Url::domain().'/verification?l='.\Yii::$app->getRequest()->get('lang', \Yii::$app->language).'&r='.intval($event->result->hasErrors()));
 
 }

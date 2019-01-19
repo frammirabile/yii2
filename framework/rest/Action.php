@@ -80,7 +80,7 @@ class Action extends \yii\base\Action
         if ($this->modelClass === null)
             throw new InvalidConfigException(get_class($this).'::$modelClass must be set.');
 
-        if (preg_match('/(?:v\d+\/)?((?:\w+\/\d+\/)+)\w+(?:\/\d+)?/', \Yii::$app->request->pathInfo, $matches)) {
+        if (preg_match('/(?:v\d+\/)?((?:\w+\/\d+\/)+)\w+(?:\/\d+)?/', \Yii::$app->getRequest()->getPathInfo(), $matches)) {
             $iterator = (new \ArrayObject(explode('/', trim($matches[1], '/'))))->getIterator();
 
             if ($iterator->valid()) {

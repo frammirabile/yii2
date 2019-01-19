@@ -6,6 +6,7 @@
 
 namespace yii\rest;
 
+use yii\base\InvalidConfigException;
 use yii\filters\auth\HttpOAuth2;
 use yii\web\{BadRequestHttpException, ServerErrorHttpException};
 
@@ -53,11 +54,12 @@ class TokenController extends ActiveController
     /**
      * @return TokenInterface
      * @throws BadRequestHttpException
+     * @throws InvalidConfigException
      * @throws ServerErrorHttpException
      */
     public function actionCreate(): TokenInterface
     {
-        $request = \Yii::$app->request->bodyParams;
+        $request = \Yii::$app->getRequest()->getBodyParams();
 
         if (!isset($request['grant_type']))
             throw new BadRequestHttpException(\Yii::t('api', 'Invalid request'), 1);
@@ -74,7 +76,7 @@ class TokenController extends ActiveController
                     if (!\Yii::$app->user->refreshToken())
                         throw new ServerErrorHttpException(\Yii::t('api', 'Token cannot be created'));
 
-                    \Yii::$app->response->setStatusCode(201);
+                    \Yii::$app->getResponse()->setStatusCode(201);
                 }
 
                 break;
@@ -88,17 +90,17 @@ class TokenController extends ActiveController
                 if (!\Yii::$app->user->refreshToken())
                     throw new ServerErrorHttpException(\Yii::t('api', 'Token cannot be refreshed'));
 
-                \Yii::$app->response->setStatusCode(201);
+                \Yii::$app->getResponse()->setStatusCode(201);
 
                 break;
             default:
                 throw new BadRequestHttpException(\Yii::t('api', 'Unsupported grant type'));
         }
 
-        \Yii::$app->response->headers
+        \Yii::$app->getResponse()->getHeaders()
             ->add('Cache-Control', 'no-store')
             ->add('Pragma', 'no-cache');
 
-        return \Yii::$app->user->token;
+        return \Yii::$app->user->getToken();
     }
 }

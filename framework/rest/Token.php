@@ -120,8 +120,8 @@ class Token extends ActiveRecord implements TokenInterface
             return false;
 
         $this->id = str_pad(mb_convert_encoding(StringHelper::uuid2Binary(Uuid::uuid4()->toString()), 'UTF-8'), 16);
-        $this->secret = \Yii::$app->security->generateRandomString();
-        $this->refresh = \Yii::$app->security->generateRandomString();
+        $this->secret = \Yii::$app->getSecurity()->generateRandomString();
+        $this->refresh = \Yii::$app->getSecurity()->generateRandomString();
 
         return true;
     }
