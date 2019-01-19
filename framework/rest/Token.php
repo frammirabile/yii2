@@ -17,9 +17,9 @@ use yii\helpers\{Json, StringHelper, Url};
  * @property string $id
  * @property int $user_id
  * @property string $secret
+ * @property string $refresh
  * @property int $created_at
  * @property int $expires_at
- * @property string $refresh_token
  *
  * @property-read ActiveUser $user
  *
@@ -28,6 +28,11 @@ use yii\helpers\{Json, StringHelper, Url};
  */
 class Token extends ActiveRecord implements TokenInterface
 {
+    /**
+     * @var int|string
+     */
+    protected $expiration;
+
     /**
      * {@inheritdoc}
      */
@@ -42,8 +47,6 @@ class Token extends ActiveRecord implements TokenInterface
     public static function findByKey(string $key): ?TokenInterface
     {
         try {
-            \Firebase\JWT\JWT::$leeway = static::getLeeway();
-
             if (count($token = explode('.', $key)) == 3
                 && ($json = Json::decode(base64_decode($token[1]), false)) !== null
                 && !empty($json->jti) && ($token = static::findOne(['id' => StringHelper::uuid2Binary($json->jti)])) !== null
@@ -59,25 +62,9 @@ class Token extends ActiveRecord implements TokenInterface
     /**
      * {@inheritdoc}
      */
-    public static function findByRefreshToken(string $refreshToken): ?TokenInterface
+    public static function findByRefresh(string $refresh): ?TokenInterface
     {
-        return ($token = static::findOne(['refresh_token' => $refreshToken])) !== null && $token->isValid() ? $token : null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function getExpiration()
-    {
-        return null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function getLeeway(): int
-    {
-        return 0;
+        return ($token = static::findOne(['refresh' => $refresh])) !== null && $token->isValid() ? $token : null;
     }
 
     /**
@@ -101,7 +88,7 @@ class Token extends ActiveRecord implements TokenInterface
             ],
             [
                 'class' => ExpirableBehavior::class,
-                'expiration' => $this->getExpiration()
+                'expiration' => $this->expiration
             ]
         ];
     }
@@ -113,12 +100,12 @@ class Token extends ActiveRecord implements TokenInterface
     {
         return [
             ['user_id', 'required'],
-            [['id', 'secret', 'refresh_token'], 'string'],
+            [['id', 'secret', 'refresh'], 'string'],
             [['user_id', 'created_at', 'expires_at'], 'integer'],
             ['id', 'unique'],
             ['user_id', 'unique'],
             ['secret', 'unique'],
-            ['refresh_token', 'unique'],
+            ['refresh', 'unique'],
             ['user_id', 'exist', 'targetRelation' => 'user']
         ];
     }
@@ -134,7 +121,7 @@ class Token extends ActiveRecord implements TokenInterface
 
         $this->id = str_pad(mb_convert_encoding(StringHelper::uuid2Binary(Uuid::uuid4()->toString()), 'UTF-8'), 16);
         $this->secret = \Yii::$app->security->generateRandomString();
-        $this->refresh_token = \Yii::$app->security->generateRandomString();
+        $this->refresh = \Yii::$app->security->generateRandomString();
 
         return true;
     }
@@ -181,7 +168,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public function isValid(): bool
     {
-        return ($expiresAt = $this->getExpiresAt()) === null || $expiresAt > time() - static::getLeeway();
+        return $this->expires_at === null || $this->expires_at > time();
     }
 
     /**

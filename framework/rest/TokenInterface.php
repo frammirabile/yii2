@@ -34,21 +34,7 @@ interface TokenInterface
      * @param string the refresh token to be looked for
      * @return TokenInterface|null the token object that matches the given refresh one
      */
-    public static function findByRefreshToken(string $refreshToken): ?TokenInterface;
-
-    /**
-     * Returns the expiration
-     *
-     * @return int|string|null the expiration
-     */
-    public static function getExpiration();
-
-    /**
-     * Returns the validity leeway
-     *
-     * @return int the validity leeway
-     */
-    public static function getLeeway(): int;
+    public static function findByRefresh(string $refreshToken): ?TokenInterface;
 
     /**
      * Converts a token object into its string representation

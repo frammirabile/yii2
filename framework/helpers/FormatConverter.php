@@ -62,4 +62,13 @@ class FormatConverter extends BaseFormatConverter
     {
         return \Yii::$app->formatter->asCurrency($value);
     }
+
+    /**
+     * @param string $value
+     * @return int
+     */
+    public static function asSeconds(string $value): int
+    {
+        return strtotime('+'.$value) - time();
+    }
 }
