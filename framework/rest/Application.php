@@ -9,11 +9,14 @@ namespace yii\rest;
 use yii\helpers\{ArrayHelper, UnsetArrayValue};
 
 /**
- * {@inheritdoc}
+ * Rest application
+ *
  * @property-read Request $request
  * @property-read Response $response
- * @property-read null $session
  * @property-read User $user
+ *
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
+ * @since 1.0
  */
 class Application extends \yii\web\Application
 {

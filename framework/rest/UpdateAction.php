@@ -7,7 +7,6 @@
 
 namespace yii\rest;
 
-use api\models\HotelMaintenance;
 use yii\base\{InvalidConfigException, Model};
 use yii\db\{ActiveRecordInterface, Exception};
 use yii\helpers\Inflector;

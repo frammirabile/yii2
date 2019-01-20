@@ -2,7 +2,7 @@
 namespace yii\rest;
 
 /**
- * Client model
+ * Rest client model
  *
  * @property-read int $id
  * @property-read string $name

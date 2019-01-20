@@ -9,7 +9,6 @@ namespace yii\rest;
 
 use yii\base\InvalidConfigException;
 use yii\data\{ActiveDataProvider, DataFilter, Pagination, Sort};
-use yii\helpers\Inflector;
 
 /**
  * IndexAction implements the API endpoint for listing multiple models.
