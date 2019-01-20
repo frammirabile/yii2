@@ -8,6 +8,7 @@ namespace yii\rest;
 
 use yii\base\InvalidConfigException;
 use yii\filters\auth\AuthMethod;
+use yii\web\UnauthorizedHttpException;
 
 /**
  * OAuth2 authentication
@@ -23,9 +24,14 @@ class HttpOAuth2 extends AuthMethod
     public $realm = 'api';
 
     /**
-     * {@inheritdoc}
+     * Authenticates the current user
+     *
      * @param User $user
+     * @param Request $request
+     * @param Response $response
+     * @return IdentityInterface|null
      * @throws InvalidConfigException
+     * @throws UnauthorizedHttpException
      */
     public function authenticate($user, $request, $response): ?IdentityInterface
     {

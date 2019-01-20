@@ -39,6 +39,13 @@ interface UserInterface
     public static function findByAccessToken(TokenInterface $token, $type = null): ?self;
 
     /**
+     * Returns the id that uniquely identifies a user
+     *
+     * @return int the id that uniquely identifies a user
+     */
+    public function getId(): int;
+
+    /**
      * Returns the username
      *
      * @return string the username

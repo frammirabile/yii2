@@ -7,34 +7,36 @@
 namespace yii\rest;
 
 /**
+ * Token interface
+ *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  */
 interface TokenInterface
 {
     /**
-     * Finds a token by the given identity
+     * Finds a token by the given user
      *
-     * @param IdentityInterface the identity to be looked for
-     * @return TokenInterface|null the token object that matches the given identity
+     * @param UserInterface $user the user to be looked for
+     * @return self|null the token object that matches the given user
      */
-    public static function findByIdentity(IdentityInterface $identity): ?TokenInterface;
+    public static function findByUser(UserInterface $user): ?self;
 
     /**
      * Finds a token by the given key
      *
-     * @param string the key to be looked for
-     * @return TokenInterface|null the token object that matches the given key
+     * @param string $key the key to be looked for
+     * @return self|null the token object that matches the given key
      */
-    public static function findByKey(string $key): ?TokenInterface;
+    public static function findByKey(string $key): ?self;
 
     /**
      * Finds a token by the given refresh one
      *
-     * @param string the refresh token to be looked for
-     * @return TokenInterface|null the token object that matches the given refresh one
+     * @param string $refreshToken the refresh token to be looked for
+     * @return self|null the token object that matches the given refresh one
      */
-    public static function findByRefresh(string $refreshToken): ?TokenInterface;
+    public static function findByRefresh(string $refreshToken): ?self;
 
     /**
      * Converts a token object into its string representation
@@ -44,18 +46,11 @@ interface TokenInterface
     public function __toString(): string;
 
     /**
-     * Returns the user ID
+     * Returns the user id
      *
-     * @return int the user ID
+     * @return int the user id
      */
     public function getUserId(): int;
-
-    /**
-     * Returns the expiration time
-     *
-     * @return int|null the expiration time
-     */
-    public function getExpiresAt(): ?int;
 
     /**
      * Returns whether the token is valid

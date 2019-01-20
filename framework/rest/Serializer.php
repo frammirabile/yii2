@@ -10,7 +10,7 @@ namespace yii\rest;
 use Yii;
 use yii\base\{Arrayable, Component, InvalidConfigException, Model};
 use yii\data\{DataProviderInterface, Pagination};
-use yii\helpers\{ArrayHelper, Inflector};
+use yii\helpers\{ArrayHelper};
 use yii\web\{Link, Request, Response};
 
 /**
@@ -129,14 +129,14 @@ class Serializer extends Component
     public $preserveKeys = false;
 
     /**
-     * @var bool whether to variablize keys
+     * @var bool whether to variablize array keys
      */
     public $variablizeKeys = true;
 
     /**
-     * @var array replacement in array keys
+     * @var array replacements in array keys
      */
-    public $keysReplacement = ['/_id$/' => ''];
+    public $keysReplacements = ['/_id$/' => ''];
 
     /**
      * {@inheritdoc}
@@ -176,9 +176,9 @@ class Serializer extends Component
         }
 
         if (ArrayHelper::isAssociative($data[0])) {
-            if (!empty($this->keysReplacement))
+            if (!empty($this->keysReplacements))
                 foreach ($data as &$model)
-                    $model = ArrayHelper::replaceKeys($model, $this->keysReplacement);
+                    $model = ArrayHelper::replaceKeys($model, $this->keysReplacements);
 
             if ($this->variablizeKeys)
                 foreach ($data as &$model)
@@ -298,7 +298,7 @@ class Serializer extends Component
 
         list($fields, $expand) = $this->getRequestedFields();
 
-        return $model->toArray($fields, array_merge($expand, array_keys($model->relatedRecords)));
+        return $model->toArray($fields, array_merge($expand, array_keys($model->getRelatedRecords())));
     }
 
     /**

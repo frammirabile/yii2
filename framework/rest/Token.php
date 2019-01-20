@@ -36,9 +36,9 @@ class Token extends ActiveRecord implements TokenInterface
     /**
      * {@inheritdoc}
      */
-    public static function findByIdentity(IdentityInterface $identity): ?TokenInterface
+    public static function findByUser(UserInterface $user): ?TokenInterface
     {
-        return ($token = static::findOne(['user_id' => $identity->getId()])) !== null && $token->isValid() ? $token : null;
+        return ($token = static::findOne(['user_id' => $user->getId()])) !== null && $token->isValid() ? $token : null;
     }
 
     /**
@@ -145,14 +145,6 @@ class Token extends ActiveRecord implements TokenInterface
     public function getUserId(): int
     {
         return $this->user_id;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getExpiresAt(): ?int
-    {
-        return $this->expires_at;
     }
 
     /**

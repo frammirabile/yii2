@@ -15,11 +15,11 @@ namespace yii\rest;
 interface IdentityInterface
 {
     /**
-     * Returns the ID that uniquely identifies an identity
+     * Returns the id that uniquely identifies an identity
      *
-     * @return int|string the ID that uniquely identifies an identity
+     * @return int the id that uniquely identifies an identity
      */
-    public function getId();
+    public function getId(): int;
 
     /**
      * Returns the identity email

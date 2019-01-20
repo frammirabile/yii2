@@ -42,7 +42,7 @@ class Request extends \yii\web\Request
     public $client;
 
     /**
-     * @var bool whether to underscore keys
+     * @var bool whether to underscore the parameters keys
      */
     public $underscoreKeys = true;
 
@@ -51,11 +51,8 @@ class Request extends \yii\web\Request
      */
     public function getBodyParams(): array
     {
-        $this->_bodyParams = parent::getBodyParams();
+        $bodyParams = parent::getBodyParams();
 
-        if ($this->underscoreKeys)
-            $this->_bodyParams = ArrayHelper::underscoreKeys($this->_bodyParams);
-
-        return $this->_bodyParams;
+        return $this->underscoreKeys ? ArrayHelper::underscoreKeys($bodyParams) : $bodyParams;
     }
 }

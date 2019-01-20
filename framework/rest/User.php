@@ -99,7 +99,7 @@ class User extends \yii\web\User
 
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
-        $this->_token = $tokenClass::findByIdentity($identity);
+        $this->_token = $tokenClass::findByUser($identity);
 
         return $this->login($identity);
     }

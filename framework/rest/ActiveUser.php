@@ -118,6 +118,14 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getUsername(): string
     {
         return $this->hasAttribute('username') ? $this->username : $this->identity->getEmail();
