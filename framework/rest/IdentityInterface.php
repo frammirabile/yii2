@@ -7,7 +7,7 @@
 namespace yii\rest;
 
 /**
- * Rest identity interface.
+ * Rest identity interface
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
@@ -15,9 +15,16 @@ namespace yii\rest;
 interface IdentityInterface
 {
     /**
-     * Returns the user email
+     * Returns the ID that uniquely identifies an identity
      *
-     * @return string the user email
+     * @return int|string the ID that uniquely identifies an identity
+     */
+    public function getId();
+
+    /**
+     * Returns the identity email
+     *
+     * @return string the identity email
      */
     public function getEmail(): string;
 }

@@ -6,8 +6,8 @@
 
 namespace yii\rest;
 
-use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveQuery;
 
 /**
  * Rest user model
@@ -15,11 +15,14 @@ use yii\behaviors\TimestampBehavior;
  * @property-read int $id
  * @property string $username
  * @property-write string $password
- * @property-read string $reset_password
+ * @property-read string $password_reset_code tbd da valorizzare all'invio della mail in formato hash
+ * @property-read int $identity_id
  * @property-write bool $active
  * @property-read bool $isActive
  * @property-read int $created_at
  * @property-read int $updated_at
+ *
+ * @property-read IdentityInterface $identity
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
@@ -37,14 +40,6 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      */
-    public static function findIdentity($id)
-    {
-        return static::findOne(['id' => $id, 'active' => true]);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public static function findByUsername(string $username): ?IdentityInterface
     {
         return self::findOne(['username' => $username, 'isActive' => true]);
@@ -52,9 +47,8 @@ class ActiveUser extends ActiveRecord implements UserInterface
 
     /**
      * {@inheritdoc}
-     * @param TokenInterface $token
      */
-    public static function findIdentityByAccessToken($token, $type = null): ?IdentityInterface
+    public static function findByAccessToken(TokenInterface $token, $type = null): ?IdentityInterface
     {
         return static::findOne(['id' => $token->getUserId(), 'isActive' => true]);
     }
@@ -144,7 +138,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
     public function setPassword(string $password): void
     {
         $this->setAttribute('password', \Yii::$app->getSecurity()->generatePasswordHash($password));
-        $this->reset_password = \Yii::$app->getSecurity()->generateRandomInteger();
+        $this->password_reset_code = \Yii::$app->getSecurity()->generateRandomInteger();
     }
 
     /**
@@ -158,9 +152,17 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      */
-    public function getResetPassword(): string
+    public function getPasswordResetCode(): string
     {
-        return $this->reset_password;
+        return $this->password_reset_code;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function validatePasswordResetCode(string $password): bool
+    {
+        return \Yii::$app->getSecurity()->validatePassword($password, $this->password);
     }
 
     /**
@@ -180,20 +182,10 @@ class ActiveUser extends ActiveRecord implements UserInterface
     }
 
     /**
-     * {@inheritdoc}
-     * @throws NotSupportedException
+     * @return ActiveQuery
      */
-    public function getAuthKey(): string
+    public function getIdentity(): ActiveQuery
     {
-        throw new NotSupportedException;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @throws NotSupportedException
-     */
-    public function validateAuthKey($authKey): bool
-    {
-        throw new NotSupportedException;
+        return $this->hasOne(\Yii::$app->user->identityClass, ['id' => 'identity_id']);
     }
 }

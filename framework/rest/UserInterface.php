@@ -9,22 +9,34 @@ namespace yii\rest;
 use yii\db\ActiveQuery;
 
 /**
- * Rest identity interface.
- *
- * @method static findIdentityByAccessToken(TokenInterface $token, $type = null) ?IdentityInterface
+ * Rest user interface
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  */
-interface UserInterface extends \yii\web\IdentityInterface
+interface UserInterface
 {
     /**
-     * Finds an identity by the given username
+     * Finds a user by the given username
      *
      * @param string $username the username to be looked for
-     * @return static|null the identity object that matches the given username
+     * @return static|null the user object that matches the given username
+     * Null should be returned if such a user cannot be found
+     * or the user is not in an active state (disabled, deleted, etc.)
      */
-    public static function findByUsername(string $username): ?IdentityInterface;
+    public static function findByUsername(string $username): ?self;
+
+    /**
+     * Finds a user by the given token
+     *
+     * @param TokenInterface $token the token to be looked for
+     * @param mixed $type the type of the token. The value of this parameter depends on the implementation.
+     * For example, [[\yii\filters\auth\HttpBearerAuth]] will set this parameter to be `yii\filters\auth\HttpBearerAuth`.
+     * @return self|null the user object that matches the given token
+     * Null should be returned if such a user cannot be found
+     * or the user is not in an active state (disabled, deleted, etc.)
+     */
+    public static function findByAccessToken(TokenInterface $token, $type = null): ?self;
 
     /**
      * Returns the username
@@ -37,21 +49,29 @@ interface UserInterface extends \yii\web\IdentityInterface
      * Returns whether the user password is valid
      *
      * @param string $password the user password
-     * @return bool Whether the user password is valid
+     * @return bool whether the user password is valid
      */
     public function validatePassword(string $password): bool;
 
     /**
-     * Returns the user reset password
+     * Returns the password reset code
      *
-     * @return string the user reset password
+     * @return string the password reset code
      */
-    public function getResetPassword(): string;
+    public function getPasswordResetCode(): string;
 
     /**
-     * Returns the user identity
+     * Returns whether the password reset code is valid
      *
-     * @return ActiveQuery the user identity
+     * @param string $passwordResetCode the password reset code
+     * @return bool whether the password reset code is valid
+     */
+    public function validatePasswordResetCode(string $passwordResetCode): bool;
+
+    /**
+     * Returns the identity
+     *
+     * @return ActiveQuery the identity
      */
     public function getIdentity(): ActiveQuery;
 }
