@@ -21,7 +21,7 @@ use yii\web\ServerErrorHttpException;
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  *
- * @tbd rivedere logica, magari utilizzando I18N
+ * @tbd sistemare e rivedere logica, magari utilizzando I18N
  */
 class TranslationBehavior extends Behavior
 {

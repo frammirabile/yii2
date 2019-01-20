@@ -12,7 +12,7 @@ namespace yii\validators;
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  *
- * @tbd
+ * @tbd sistemare
  */
 class TranslationValidator extends Validator
 {

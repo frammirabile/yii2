@@ -14,7 +14,7 @@ use yii\base\InvalidConfigException;
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  *
- * @tbd
+ * @tbd sistemare
  */
 class TimestampValidator extends DateValidator
 {

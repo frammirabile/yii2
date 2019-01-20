@@ -16,7 +16,7 @@ use yii\web\ServerErrorHttpException;
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  *
- * @tbd:
+ * @tbd sistemare:
  *  - rimuovere e usare frammirabile/yii2-notification
  *  - convertire automaticamente i valori in mail: float -> asCurrency, date -> asDate
  */
