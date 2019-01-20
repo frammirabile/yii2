@@ -8,6 +8,7 @@
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecordInterface;
 use yii\helpers\Inflector;
 use yii\web\NotFoundHttpException;
@@ -78,7 +79,7 @@ class Action extends \yii\base\Action
     public function init(): void
     {
         if ($this->modelClass === null)
-            throw new InvalidConfigException(get_class($this).'::$modelClass must be set.');
+            throw new InvalidConfigException(get_class($this).'::$modelClass must be set');
 
         if (preg_match('/(?:v\d+\/)?((?:\w+\/\d+\/)+)\w+(?:\/\d+)?/', \Yii::$app->getRequest()->getPathInfo(), $matches)) {
             $iterator = (new \ArrayObject(explode('/', trim($matches[1], '/'))))->getIterator();
@@ -122,8 +123,12 @@ class Action extends \yii\base\Action
         $modelClass = $this->modelClass;
         $keys = $modelClass::primaryKey();
 
-        if ($this->primaryModel !== null)
-            $model = ($relation = $this->primaryModel->getRelation(lcfirst($modelClass::name(true))))->where([current(array_reverse($relation->modelClass::primaryKey())) => $id])->one();
+        if ($this->primaryModel !== null) {
+            /** @var ActiveQuery $relation */
+            $relation = $this->primaryModel->getRelation(lcfirst($modelClass::name(true)));
+            $modelClass = $relation->modelClass;
+            $model = $relation->where([current(array_reverse($modelClass::primaryKey())) => $id])->one();
+        }
         elseif (count($keys) > 1) {
             $values = explode(',', $id);
 

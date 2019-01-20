@@ -7,6 +7,7 @@
 
 namespace yii\rest;
 
+use yii\filters\auth\HttpBearerAuth;
 use yii\filters\Cors;
 use yii\helpers\{ArrayHelper, StringHelper, UnsetArrayValue};
 
@@ -69,13 +70,16 @@ abstract class ActiveController extends Controller
 
     /**
      * {@inheritdoc}
+     *
+     * @tbd:
+     *  - gestire formato e lingua per controller/action
+     *  - ottimizzare autorizzazione con livello per action: 1 pubblica, 2 privata, 3 autorizzazione
      */
     public function behaviors(): array
     {
         return ArrayHelper::merge(parent::behaviors(), [
             'contentNegotiator' => [
-                'formats' => ['text/plain' => Response::FORMAT_RAW],
-                'languages' => \Yii::$app->params['languages']
+                'formats' => ['text/plain' => Response::FORMAT_RAW]
             ],
             'authenticator' => new UnsetArrayValue,
             [
