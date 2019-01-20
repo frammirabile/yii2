@@ -7,6 +7,7 @@
 
 namespace yii\rest;
 
+use yii\db\ActiveRecordInterface;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -23,10 +24,10 @@ class ViewAction extends Action
      * Displays a model
      *
      * @param string $id the model primary key
-     * @return ActiveRecord the model being displayed
+     * @return ActiveRecordInterface the model being displayed
      * @throws NotFoundHttpException
      */
-    public function run(string $id): ActiveRecord
+    public function run(string $id): ActiveRecordInterface
     {
         $model = $this->findModel($id);
 

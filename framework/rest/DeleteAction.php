@@ -25,7 +25,6 @@ class DeleteAction extends Action
      *
      * @param string $id the model primary key
      * @return void
-     * @throws \Throwable
      * @throws InvalidConfigException
      * @throws NotFoundHttpException
      * @throws ServerErrorHttpException

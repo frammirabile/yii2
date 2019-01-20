@@ -7,7 +7,6 @@
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
-use yii\filters\auth\HttpOAuth2;
 use yii\web\{BadRequestHttpException, ServerErrorHttpException};
 
 /**

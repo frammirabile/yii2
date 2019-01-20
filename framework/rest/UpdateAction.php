@@ -8,7 +8,7 @@
 namespace yii\rest;
 
 use yii\base\{InvalidConfigException, Model};
-use yii\db\Exception;
+use yii\db\{ActiveQuery, ActiveRecordInterface, Exception};
 use yii\helpers\Inflector;
 use yii\web\{NotFoundHttpException, ServerErrorHttpException};
 
@@ -39,15 +39,16 @@ class UpdateAction extends Action
      * Updates a model
      *
      * @param string $id the model primary key
-     * @return ActiveRecord the model being updated
+     * @return ActiveRecordInterface the model being updated
      * @throws Exception
      * @throws InvalidConfigException
      * @throws NotFoundHttpException
      * @throws ServerErrorHttpException
      */
-    public function run(string $id): ActiveRecord
+    public function run(string $id): ActiveRecordInterface
     {
         try {
+            /** @var ActiveRecord $model */
             $model = $this->findModel($id);
         } catch (NotFoundHttpException $e) {
             if ($this->primaryModel === null)
@@ -56,14 +57,14 @@ class UpdateAction extends Action
             /** @var CreateAction $action */
             $action = $this->controller->createAction('create');
 
-            /** @var ActiveRecord $modelClass */
-            $action->modelClass = $modelClass = $action->primaryModel->getRelation(Inflector::pluralize($action->controller->id))->modelClass;
+            /**
+             * @var ActiveQuery $relation
+             * @var ActiveRecord $modelClass
+             */
+            $action->modelClass = $modelClass = ($relation = $action->primaryModel->getRelation(Inflector::pluralize($action->controller->id)))->modelClass;
             $action->data = array_combine($modelClass::primaryKey(), [$action->primaryModel->getPrimaryKey(), $id]) + \Yii::$app->getRequest()->getBodyParams();
 
-            /** @var ActiveRecord $model */
-            $model = $action->run();
-
-            return $model;
+            return $action->run();
         }
 
         if ($this->checkAccess)
