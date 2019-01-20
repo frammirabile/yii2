@@ -9,7 +9,6 @@ namespace yii\rest;
 
 use yii\base\InvalidConfigException;
 use yii\db\ActiveQuery;
-use yii\db\ActiveRecordInterface;
 use yii\helpers\Inflector;
 use yii\web\NotFoundHttpException;
 
@@ -28,7 +27,7 @@ class Action extends \yii\base\Action
 {
     /**
      * @var string class name of the model which will be handled by this action.
-     * The model class must implement [[ActiveRecordInterface]].
+     * The model class must implement [[ActiveRecord]].
      * This property must be set.
      */
     public $modelClass;
@@ -65,7 +64,7 @@ class Action extends \yii\base\Action
     public $checkAccess;
 
     /**
-     * @var ActiveRecordInterface the primary model
+     * @var ActiveRecord the primary model
      */
     protected $primaryModel;
 
@@ -111,10 +110,10 @@ class Action extends \yii\base\Action
      * the ID must be a string of the primary key values separated by commas.
      * The order of the primary key values should follow that returned by the `primaryKey()` method
      * of the model.
-     * @return ActiveRecordInterface the model found
+     * @return ActiveRecord the model found
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function findModel(string $id): ActiveRecordInterface
+    public function findModel(string $id): ActiveRecord
     {
         if ($this->findModel !== null)
             return call_user_func($this->findModel, $id, $this);

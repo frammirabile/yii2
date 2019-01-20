@@ -31,7 +31,7 @@ class CreateAction extends Action
     public $scenario = Model::SCENARIO_DEFAULT;
 
     /**
-     * @var string the name of the view action. This property is needed to create the URL when the model is successfully created
+     * @var string the name of the view action. This property is needed to create the URL when the model is successfully created.
      */
     public $viewAction = 'view';
 
@@ -46,7 +46,7 @@ class CreateAction extends Action
      * @return ActiveRecordInterface the model newly created
      * @throws Exception
      * @throws InvalidConfigException
-     * @throws ServerErrorHttpException if there is any error when creating the model
+     * @throws ServerErrorHttpException
      */
     public function run(): ActiveRecordInterface
     {
@@ -57,12 +57,11 @@ class CreateAction extends Action
         $model = new $this->modelClass(['scenario' => $this->scenario]);
         $model->load($this->data ?: \Yii::$app->getRequest()->getBodyParams(), '');
 
-        if ($model->save()) {
-            $response = \Yii::$app->getResponse();
-            $response->setStatusCode(201);
-            $id = implode(',', array_values($model->getPrimaryKey(true)));
-            $response->getHeaders()->set('Location', Url::toRoute([$this->viewAction, 'id' => $id], true));
-        } elseif (!$model->hasErrors())
+        if ($model->save())
+            \Yii::$app->getResponse()
+                      ->setStatusCode(201)
+                      ->getHeaders()->set('Location', Url::toRoute([$this->viewAction, 'id' => implode(',', array_values($model->getPrimaryKey(true)))], true));
+        elseif (!$model->hasErrors())
             throw new ServerErrorHttpException('Model cannot be created');
 
         return $model;

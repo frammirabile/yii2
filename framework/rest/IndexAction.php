@@ -9,6 +9,7 @@ namespace yii\rest;
 
 use yii\base\InvalidConfigException;
 use yii\data\{ActiveDataProvider, DataFilter, Pagination, Sort};
+use yii\db\ActiveQuery;
 
 /**
  * IndexAction implements the API endpoint for listing multiple models.
@@ -73,7 +74,7 @@ class IndexAction extends Action
     public $dataFilter;
 
     /**
-     * @var {@inheritdoc}
+     * @var ActiveQuery the query to return the collection of the models
      */
     public $query;
 

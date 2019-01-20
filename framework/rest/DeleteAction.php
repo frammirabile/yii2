@@ -23,13 +23,14 @@ class DeleteAction extends Action
     /**
      * Deletes a model
      *
-     * @param mixed $id id of the model to be deleted
+     * @param string $id the model primary key
      * @return void
+     * @throws \Throwable
      * @throws InvalidConfigException
      * @throws NotFoundHttpException
-     * @throws ServerErrorHttpException on failure
+     * @throws ServerErrorHttpException
      */
-    public function run($id): void
+    public function run(string $id): void
     {
         $model = $this->findModel($id);
 
