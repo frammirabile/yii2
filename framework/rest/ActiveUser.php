@@ -117,17 +117,9 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      */
-    public function getId(): string
-    {
-        return $this->getPrimaryKey();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getUsername(): string
     {
-        return $this->hasAttribute('username') ? $this->username : $this->email;
+        return $this->hasAttribute('username') ? $this->username : $this->identity->getEmail();
     }
 
     /**
@@ -146,7 +138,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function validatePassword(string $password): bool
     {
-        return \Yii::$app->getSecurity()->validatePassword($password, $this->password);
+        return \Yii::$app->security->validatePassword($password, $this->password);
     }
 
     /**
@@ -160,17 +152,9 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      */
-    public function validatePasswordResetCode(string $password): bool
+    public function validatePasswordResetCode(string $passordResetCode): bool
     {
-        return \Yii::$app->getSecurity()->validatePassword($password, $this->password);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getEmail(): string
-    {
-        return $this->email;
+        return \Yii::$app->security->validatePassword($passordResetCode, $this->password_reset_code);
     }
 
     /**

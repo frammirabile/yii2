@@ -20,11 +20,11 @@ interface UserInterface
      * Finds a user by the given username
      *
      * @param string $username the username to be looked for
-     * @return static|null the user object that matches the given username
+     * @return self|null the user object that matches the given username
      * Null should be returned if such a user cannot be found
      * or the user is not in an active state (disabled, deleted, etc.)
      */
-    public static function findByUsername(string $username): ?self;
+    public static function findByUsername(string $username): ?IdentityInterface;
 
     /**
      * Finds a user by the given token
@@ -36,7 +36,7 @@ interface UserInterface
      * Null should be returned if such a user cannot be found
      * or the user is not in an active state (disabled, deleted, etc.)
      */
-    public static function findByAccessToken(TokenInterface $token, $type = null): ?self;
+    public static function findByAccessToken(TokenInterface $token, $type = null): ?IdentityInterface;
 
     /**
      * Returns the username
