@@ -126,7 +126,7 @@ abstract class ActiveController extends Controller
             'options' => OptionsAction::class
         ];
 
-        /* tbd
+        /* tbd sistemare
         if (in_array(Filterable::class, class_implements($this->modelClass)))
             ArrayHelper::setValue($actions, 'index.dataFilter', [
                 'class' => ActiveDataFilter::class,

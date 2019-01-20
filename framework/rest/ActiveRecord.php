@@ -35,14 +35,14 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     protected $savingNotAllowed;
 
     /**
-     * @var array
-     */
-    private $_dependencies = [];
-
-    /**
      * @var static[]
      */
     private $_related = [];
+
+    /**
+     * @var array
+     */
+    private $_dependencies = [];
 
     /**
      * @param bool $pluralize
@@ -51,10 +51,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     public static function name(bool $pluralize = false): string {
         $name = StringHelper::basename(get_called_class());
 
-        if ($pluralize)
-            $name = Inflector::pluralize($name);
-
-        return $name;
+        return $pluralize ? Inflector::pluralize($name) : $name;
     }
 
     /**

@@ -8,7 +8,6 @@ namespace yii\rest;
 
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
-use yii\validators\PasswordValidator;
 
 /**
  * Rest user model
