@@ -16,6 +16,11 @@ class Client extends ActiveRecord
     /**
      * {@inheritdoc}
      */
+    protected $savingNotAllowed = true;
+
+    /**
+     * {@inheritdoc}
+     */
     public function rules(): array
     {
         return [

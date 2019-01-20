@@ -164,7 +164,7 @@ class User extends \yii\web\User
      */
     public function getUsername(): ?string
     {
-        return $this->_identity !== null ? $this->_identity->getUsername() : null;
+        return $this->_user->getUsername();
     }
 
     /**
@@ -180,9 +180,27 @@ class User extends \yii\web\User
     /**
      * {@inheritdoc}
      */
+    public function getId()
+    {
+        return $this->_user->getId();
+    }
+
+    /**
+     * Returns the identity id
+     *
+     * @return int
+     */
+    public function getIdentityId(): int
+    {
+        return $this->_identity->getId() ?? null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getIsGuest(): bool
     {
-        return $this->getIdentity() === false;
+        return $this->_identity === false;
     }
 
     /**

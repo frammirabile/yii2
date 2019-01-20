@@ -7,19 +7,19 @@
 namespace yii\rest;
 
 use Ramsey\Uuid\Uuid;
-use yii\behaviors\{ExpirableBehavior, TimestampBehavior};
+use yii\behaviors\{BlameableBehavior, ExpirableBehavior, TimestampBehavior};
 use yii\db\ActiveQuery;
 use yii\helpers\{Json, StringHelper, Url};
 
 /**
  * Token model
  *
- * @property string $id
- * @property int $user_id
- * @property string $secret
- * @property string $refresh
- * @property int $created_at
- * @property int $expires_at
+ * @property-read string $id
+ * @property-read int $user_id
+ * @property-read string $secret
+ * @property-read string $refresh
+ * @property-read int $created_at
+ * @property-read int $expires_at
  *
  * @property-read ActiveUser $user
  *
@@ -28,6 +28,11 @@ use yii\helpers\{Json, StringHelper, Url};
  */
 class Token extends ActiveRecord implements TokenInterface
 {
+    /**
+     * {@inheritdoc}
+     */
+    protected $savingNotAllowed = false;
+
     /**
      * @var int|string
      */
@@ -82,6 +87,11 @@ class Token extends ActiveRecord implements TokenInterface
     public function behaviors(): array
     {
         return [
+            [
+                'class' => BlameableBehavior::class,
+                'createdByAttribute' => 'user_id',
+                'updatedByAttribute' => false
+            ],
             [
                 'class' => TimestampBehavior::class,
                 'updatedAtAttribute' => false
@@ -148,19 +158,19 @@ class Token extends ActiveRecord implements TokenInterface
     }
 
     /**
-     * @return ActiveQuery
-     */
-    public function getUser(): ActiveQuery
-    {
-        return $this->hasOne(ActiveUser::class, ['id' => 'user_id']);
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function isValid(): bool
     {
         return $this->expires_at === null || $this->expires_at > time();
+    }
+
+    /**
+     * @return ActiveQuery
+     */
+    public function getUser(): ActiveQuery
+    {
+        return $this->hasOne(ActiveUser::class, ['id' => 'user_id']);
     }
 
     /**
