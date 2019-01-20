@@ -134,7 +134,7 @@ class Serializer extends Component
     public $variablizeKeys = true;
 
     /**
-     * @var array|null replacement in array keys
+     * @var array replacement in array keys
      */
     public $keysReplacement = ['/_id$/' => ''];
 
@@ -176,7 +176,7 @@ class Serializer extends Component
         }
 
         if (ArrayHelper::isAssociative($data[0])) {
-            if ($this->keysReplacement !== null)
+            if (!empty($this->keysReplacement))
                 foreach ($data as &$model)
                     $model = ArrayHelper::replaceKeys($model, $this->keysReplacement);
 

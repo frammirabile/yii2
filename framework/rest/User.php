@@ -39,12 +39,12 @@ class User extends \yii\web\User
     protected $_user;
 
     /**
-     * @var IdentityInterface|null|false
+     * @var IdentityInterface|false
      */
     protected $_identity = false;
 
     /**
-     * @var TokenInterface|null
+     * @var TokenInterface
      */
     protected $_token;
 

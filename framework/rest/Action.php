@@ -64,7 +64,7 @@ class Action extends \yii\base\Action
     public $checkAccess;
 
     /**
-     * @var ActiveRecordInterface|null the primary model
+     * @var ActiveRecordInterface the primary model
      */
     protected $primaryModel;
 
