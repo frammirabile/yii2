@@ -108,9 +108,7 @@ class IndexAction extends Action
      */
     protected function prepareDataProvider(): object
     {
-        $requestParams = \Yii::$app->getRequest()->getBodyParams();
-
-        if (empty($requestParams))
+        if (empty($requestParams = \Yii::$app->getRequest()->getBodyParams()))
             $requestParams = \Yii::$app->getRequest()->getQueryParams();
 
         $filter = null;
@@ -144,7 +142,7 @@ class IndexAction extends Action
             'class' => ActiveDataProvider::class,
             'query' => $query,
             'pagination' => $this->pagination ?? ['params' => $requestParams],
-            'sort' => $this->sort ?: ['params' => $requestParams]
+            'sort' => $this->sort ?? ['params' => $requestParams]
         ]);
     }
 }
