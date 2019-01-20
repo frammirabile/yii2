@@ -22,21 +22,13 @@ class UserRule extends UrlRule
     /**
      * {@inheritdoc}
      */
-    public $only = ['create', 'view-me', 'update-me', 'delete-me', 'view-my', 'update-my', 'create-refreshPassword', 'refresh-password'];
-
-    /**
-     * {@inheritdoc}
-     */
-    public $extraPatterns = [
-        'POST {username}/refreshPassword' => 'create-refreshPassword',
-        'PUT {username}/password' => 'refresh-password'
-    ];
+    public $only = ['create', 'view-me', 'update-me', 'delete-me', 'view-my', 'update-my'];
 
     /**
      * {@inheritdoc}
      */
     public $tokens = [
-        '{username}' => '<username:[a-z0-9\.\+-_]+@[a-z0-9\.\+-_]+\.[a-z]{2,}>',
+        '{username}' => '<username:[a-z0-9\.\+-_]+(?:@[a-z0-9\.\+-_]+\.[a-z]{2,}>)?',
         '{property}' => '<property:\w+>'
     ];
 

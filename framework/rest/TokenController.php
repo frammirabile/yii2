@@ -7,7 +7,8 @@
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
-use yii\web\{BadRequestHttpException, ServerErrorHttpException};
+use yii\db\ActiveRecordInterface;
+use yii\web\ServerErrorHttpException;
 
 /**
  * Rest token controller
@@ -52,54 +53,32 @@ class TokenController extends ActiveController
 
     /**
      * @return TokenInterface
-     * @throws BadRequestHttpException
      * @throws InvalidConfigException
      * @throws ServerErrorHttpException
      */
     public function actionCreate(): TokenInterface
     {
-        $request = \Yii::$app->getRequest()->getBodyParams();
+        $token = \Yii::$app->user->getToken();
 
-        if (!isset($request['grant_type']))
-            throw new BadRequestHttpException(\Yii::t('api', 'Invalid request'), 1);
-
-        switch ($request['grant_type']) {
-            case 'password':
-                if (!isset($request['username'], $request['password']))
-                    throw new BadRequestHttpException(\Yii::t('api', 'Invalid request'), 2);
-
-                if (!\Yii::$app->user->authenticate($request['username'], $request['password']))
-                    throw new BadRequestHttpException('Invalid grant', 1);
-
-                if (!isset(\Yii::$app->user->token) || !\Yii::$app->user->token->isValid()) {
-                    if (!\Yii::$app->user->refreshToken())
-                        throw new ServerErrorHttpException(\Yii::t('api', 'Token cannot be created'));
-
-                    \Yii::$app->getResponse()->setStatusCode(201);
-                }
-
-                break;
-            case 'refresh_token':
-                if (!isset($request['refresh_token']))
-                    throw new BadRequestHttpException(\Yii::t('api', 'Invalid request'), 3);
-
-                if (!\Yii::$app->user->authenticateByRefreshToken($request['refresh_token']))
-                    throw new BadRequestHttpException('Invalid grant', 2);
-
-                if (!\Yii::$app->user->refreshToken())
-                    throw new ServerErrorHttpException(\Yii::t('api', 'Token cannot be refreshed'));
+        if ($token !== null & !$token->isValid())
+            try {
+                /** @var ActiveRecordInterface $token */
+                $token->delete();
+                $token = new \Yii::$app->user->tokenClass;
+                $token->save();
 
                 \Yii::$app->getResponse()->setStatusCode(201);
-
-                break;
-            default:
-                throw new BadRequestHttpException(\Yii::t('api', 'Unsupported grant type'));
-        }
+            } catch (\Throwable $e) {
+                \Yii::error($e->getMessage(), __METHOD__);
+                throw new ServerErrorHttpException('Token cannot be created');
+            }
+        elseif (\Yii::$app->getRequest()->getBodyParam('grant_type') == 'refresh_token')
+            throw new ServerErrorHttpException('Token cannot be refreshed');
 
         \Yii::$app->getResponse()->getHeaders()
             ->add('Cache-Control', 'no-store')
             ->add('Pragma', 'no-cache');
 
-        return \Yii::$app->user->getToken();
+        return $token;
     }
 }

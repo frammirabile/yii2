@@ -8,7 +8,7 @@ namespace yii\rest;
 
 use yii\base\{ActionEvent, InvalidConfigException};
 use yii\db\ActiveRecordInterface;
-use yii\filters\auth\{CompositeAuth, HttpBasicAuth, HttpBearerAuth, QueryParamAuth};
+use yii\filters\auth\{CompositeAuth, HttpBearerAuth};
 use yii\helpers\Inflector;
 use yii\web\NotFoundHttpException;
 

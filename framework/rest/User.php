@@ -110,6 +110,8 @@ class User extends \yii\web\User
      */
     public function authenticateByRefreshToken(string $token): bool
     {
+        #tbd verifica token sia scaduto
+
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
 
@@ -131,30 +133,6 @@ class User extends \yii\web\User
         $identityClass = $this->identityClass;
 
         return ($this->_token = $tokenClass::findByKey($token)) !== null && ($identity = $identityClass::findIdentityByAccessToken($this->_token, $type)) !== null && $this->login($identity) ? $identity : null;
-    }
-
-    /**
-     * @return bool
-     */
-    public function refreshToken(): bool
-    {
-        /** @var Token $tokenClass */
-        $tokenClass = $this->tokenClass;
-        $tokenClass::deleteAll(['user_id' => $this->_identity->getId()]); #tbd usare interfaccia e id in variabile
-
-        try {
-            /** @var Token $token */
-            $token = new $this->tokenClass(['attributes' => ['user_id' => $this->_identity->getId()]]);
-            $token->save();
-        } catch (\Throwable $e) {
-            \Yii::error($e->getMessage(), __METHOD__);
-            return false;
-        }
-
-        $this->_token = &$token;
-        $token->trigger(ActiveRecord::EVENT_AFTER_REFRESH);
-
-        return true;
     }
 
     /**

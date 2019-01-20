@@ -45,23 +45,17 @@ class HttpOAuth2 extends AuthMethod
         if (!isset($request['grant_type']))
             return null;
 
+        $identity = null;
+
         switch ($request['grant_type']) {
             case 'password':
-                if (!isset($request['username'], $request['password']))
-                    return null;
-
-                $identity = $user->authenticate($request['username'], $request['password']);
+                if (isset($request['username'], $request['password']))
+                    $identity = $user->authenticate($request['username'], $request['password']);
 
                 break;
             case 'refresh_token':
-                if (!isset($request['refresh_token']))
-                    return null;
-
-                $identity = $user->authenticateByRefreshToken($request['refresh_token']);
-
-                break;
-            default:
-                return null;
+                if (isset($request['refresh_token']))
+                    $identity = $user->authenticateByRefreshToken($request['refresh_token']);
         }
 
         if ($identity === null)
