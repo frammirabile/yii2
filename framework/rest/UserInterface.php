@@ -24,7 +24,7 @@ interface UserInterface
      * Null should be returned if such a user cannot be found
      * or the user is not in an active state (disabled, deleted, etc.)
      */
-    public static function findByUsername(string $username): ?IdentityInterface;
+    public static function findByUsername(string $username): ?self;
 
     /**
      * Finds a user by the given token
@@ -36,7 +36,7 @@ interface UserInterface
      * Null should be returned if such a user cannot be found
      * or the user is not in an active state (disabled, deleted, etc.)
      */
-    public static function findByAccessToken(TokenInterface $token, $type = null): ?IdentityInterface;
+    public static function findByAccessToken(TokenInterface $token, $type = null): ?self;
 
     /**
      * Returns the username

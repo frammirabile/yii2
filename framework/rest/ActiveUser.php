@@ -40,7 +40,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      */
-    public static function findByUsername(string $username): ?IdentityInterface
+    public static function findByUsername(string $username): ?UserInterface
     {
         return self::findOne(['username' => $username, 'isActive' => true]);
     }
@@ -48,7 +48,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      */
-    public static function findByAccessToken(TokenInterface $token, $type = null): ?IdentityInterface
+    public static function findByAccessToken(TokenInterface $token, $type = null): ?UserInterface
     {
         return static::findOne(['id' => $token->getUserId(), 'isActive' => true]);
     }
@@ -63,20 +63,21 @@ class ActiveUser extends ActiveRecord implements UserInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @tbd ottimizzare regole username e password
      */
     public function rules(): array
     {
         return [
-            [['username', 'password', 'email'], 'required'],
-            'password' => ['password', 'string', 'when' => function() {
+            [['username', 'password', 'identity_id'], 'required'],
+            [['username'], 'string'],
+            ['password', 'string', 'when' => function() {
                 return $this->isAttributeChanged('password');
             }],
-            'email' => ['email', 'string'],
-            ['email', 'email'],
+            ['identity_id', 'integer'],
             ['active', 'default', 'value' => false],
             ['active', 'boolean'],
-            ['username', 'unique'],
-            ['email', 'unique']
+            ['identity_id', 'unique']
         ];
     }
 
@@ -86,8 +87,8 @@ class ActiveUser extends ActiveRecord implements UserInterface
     public function scenarios(): array
     {
         return [
-            self::SCENARIO_CREATE => ['username', 'password', 'email'],
-            self::SCENARIO_UPDATE => ['']
+            self::SCENARIO_CREATE => ['username', 'password', 'identity_id'],
+            self::SCENARIO_UPDATE => ['password', 'active']
         ];
     }
 
@@ -111,7 +112,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function fields(): array
     {
-        return ['id', 'username', 'email'];
+        return ['id', 'username'];
     }
 
     /**
@@ -129,8 +130,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function setPassword(string $password): void
     {
-        $this->setAttribute('password', \Yii::$app->getSecurity()->generatePasswordHash($password));
-        $this->password_reset_code = \Yii::$app->getSecurity()->generateRandomInteger();
+        $this->password = \Yii::$app->getSecurity()->generatePasswordHash($password);
     }
 
     /**
