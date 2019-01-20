@@ -87,7 +87,7 @@ class User extends \yii\web\User
     /**
      * @param string $username
      * @param string $password
-     * @return bool
+     * @return IdentityInterface
      */
     public function authenticate(string $username, string $password): bool
     {
@@ -106,7 +106,7 @@ class User extends \yii\web\User
 
     /**
      * @param string $token
-     * @return bool
+     * @return IdentityInterface
      */
     public function authenticateByRefreshToken(string $token): bool
     {
