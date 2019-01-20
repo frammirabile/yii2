@@ -49,7 +49,7 @@ class Token extends ActiveRecord implements TokenInterface
     /**
      * {@inheritdoc}
      */
-    public static function findByKey(string $key): ?TokenInterface
+    public static function findByString(string $key): ?TokenInterface
     {
         try {
             if (count($token = explode('.', $key)) == 3
@@ -105,28 +105,11 @@ class Token extends ActiveRecord implements TokenInterface
 
     /**
      * {@inheritdoc}
-     */
-    public function rules(): array
-    {
-        return [
-            ['user_id', 'required'],
-            [['id', 'secret', 'refresh'], 'string'],
-            [['user_id', 'created_at', 'expires_at'], 'integer'],
-            ['id', 'unique'],
-            ['user_id', 'unique'],
-            ['secret', 'unique'],
-            ['refresh', 'unique'],
-            ['user_id', 'exist', 'targetRelation' => 'user']
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
      * @throws \Exception
      */
     public function beforeSave($insert): bool
     {
-        if (!parent::beforeSave($insert) || !$insert)
+        if (!parent::beforeSave($insert))
             return false;
 
         $this->id = str_pad(mb_convert_encoding(StringHelper::uuid2Binary(Uuid::uuid4()->toString()), 'UTF-8'), 16);

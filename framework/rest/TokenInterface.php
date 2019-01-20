@@ -23,12 +23,12 @@ interface TokenInterface
     public static function findByUser(UserInterface $user): ?self;
 
     /**
-     * Finds a token by the given key
+     * Finds a token by the given string
      *
-     * @param string $key the key to be looked for
-     * @return self|null the token object that matches the given key
+     * @param string $string the string to be looked for
+     * @return self|null the token object that matches the given string
      */
-    public static function findByKey(string $key): ?self;
+    public static function findByString(string $string): ?self;
 
     /**
      * Finds a token by the given refresh one
