@@ -12,10 +12,8 @@ use yii\helpers\StringHelper;
 /**
  * Rest user
  *
- * @property-read IdentityInterface|null $identity
  * @property-read string $username
- * @property-read string $email
- * @property-read bool $isAdmin
+ * @property-read IdentityInterface|null $identity
  * @property-read TokenInterface|null $token
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
@@ -36,7 +34,7 @@ class User extends \yii\web\User
     /**
      * @var UserInterface
      */
-    protected $_user;
+    protected $_this;
 
     /**
      * @var IdentityInterface|false
@@ -82,6 +80,14 @@ class User extends \yii\web\User
     public function getIdentity($autoRenew = true)
     {
         return $this->_identity;
+    }
+
+    /**
+     * @return TokenInterface|null
+     */
+    public function getToken(): ?TokenInterface
+    {
+        return $this->_token;
     }
 
     /**
@@ -136,26 +142,6 @@ class User extends \yii\web\User
     }
 
     /**
-     * Returns the username
-     *
-     * @return string|null the username
-     */
-    public function getUsername(): ?string
-    {
-        return $this->_user->getUsername();
-    }
-
-    /**
-     * Returns the user email
-     *
-     * @return string|null the user email
-     */
-    public function getEmail(): ?string
-    {
-        return $this->_identity !== null ? $this->_identity->getEmail() : null;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function getId()
@@ -164,13 +150,13 @@ class User extends \yii\web\User
     }
 
     /**
-     * Returns the identity id
+     * Returns the username
      *
-     * @return int
+     * @return string|null the username
      */
-    public function getIdentityId(): int
+    public function getUsername(): ?string
     {
-        return $this->_identity->getId() ?? null;
+        return $this->_user->getUsername();
     }
 
     /**
@@ -182,10 +168,12 @@ class User extends \yii\web\User
     }
 
     /**
-     * @return TokenInterface|null
+     * Returns the identity id
+     *
+     * @return int
      */
-    public function getToken(): ?TokenInterface
+    public function getIdentityId(): int
     {
-        return $this->_token;
+        return $this->_identity->getId() ?? null;
     }
 }
