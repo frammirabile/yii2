@@ -13,7 +13,9 @@ use yii\helpers\StringHelper;
 /**
  * Rest user
  *
+ * @property-read int $id
  * @property-read string $username
+ * @property-read int $identity_id
  * @property-read IdentityInterface|null $identity
  * @property-read TokenInterface|null $token
  *
@@ -96,7 +98,10 @@ class User extends \yii\web\User
      */
     public function hasProperty($name, $checkVars = true, $checkBehaviors = true): bool
     {
-        return parent::hasProperty($name, $checkVars, $checkBehaviors);
+        /** @var ActiveRecord $identity */
+        $identity = $this->_identity;
+
+        return parent::hasProperty($name) || $identity->hasProperty($name);
     }
 
     /**
@@ -104,7 +109,10 @@ class User extends \yii\web\User
      */
     public function canGetProperty($name, $checkVars = true, $checkBehaviors = true): bool
     {
-        return parent::canGetProperty($name, $checkVars, $checkBehaviors);
+        /** @var ActiveRecord $identity */
+        $identity = $this->_identity;
+
+        return $this->hasProperty($name) ? parent::canGetProperty($name) : $identity->canGetProperty($name);
     }
 
     /**

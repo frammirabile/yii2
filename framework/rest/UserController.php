@@ -81,10 +81,7 @@ class UserController extends ActiveController
      */
     public function actionViewMy(string $property)
     {
-        /** @var ActiveRecord $identity */
-        $identity = ($user = \Yii::$app->user)->getIdentity();
-
-        return $identity->canGetProperty($property) ? $identity->$property : $user->$property;
+        return \Yii::$app->user->hasProperty($property) ? \Yii::$app->user->$property : $this->{__METHOD__.ucfirst($property)}();
     }
 
     /**
