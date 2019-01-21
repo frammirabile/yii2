@@ -37,7 +37,7 @@ class DeleteAction extends Action
             call_user_func($this->checkAccess, $this->id, $model);
 
         if ($model->delete() === false)
-            throw new ServerErrorHttpException('Model cannot be deleted');
+            throw new ServerErrorHttpException(\Yii::t('yii', 'Model cannot be deleted'));
 
         \Yii::$app->getResponse()->setStatusCode(204);
     }

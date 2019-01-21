@@ -15,12 +15,12 @@ namespace yii\rest;
 interface TokenInterface
 {
     /**
-     * Finds a token by the given user
+     * Finds a token by the given user id
      *
-     * @param UserInterface $user the user to be looked for
-     * @return self|null the token object that matches the given user
+     * @param int $userId the user id to be looked for
+     * @return self|null the token object that matches the given user id
      */
-    public static function findByUser(UserInterface $user): ?self;
+    public static function findByUserId(int $userId): ?self;
 
     /**
      * Finds a token by the given string

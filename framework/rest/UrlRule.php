@@ -157,7 +157,7 @@ class UrlRule extends CompositeUrlRule
     public function init(): void
     {
         if (empty($this->controller))
-            throw new InvalidConfigException('"controller" must be set.');
+            throw new InvalidConfigException(\Yii::t('yii', 'Controller must be set'));
 
         $controllers = [];
         foreach ((array) $this->controller as $urlName => $controller) {

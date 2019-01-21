@@ -15,6 +15,14 @@ namespace yii\rest;
 interface IdentityInterface
 {
     /**
+     * Finds an identity by the given id
+     *
+     * @param int $id the id to be looked for
+     * @return self|null the identity object that matches the given id
+     */
+    public static function find(int $id): ?self;
+
+    /**
      * Returns the id that uniquely identifies an identity
      *
      * @return int the id that uniquely identifies an identity

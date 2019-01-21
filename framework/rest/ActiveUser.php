@@ -7,7 +7,6 @@
 namespace yii\rest;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveQuery;
 
 /**
  * Rest user model
@@ -174,10 +173,24 @@ class ActiveUser extends ActiveRecord implements UserInterface
     }
 
     /**
-     * @return ActiveQuery
+     * @return IdentityInterface|null
      */
-    public function getIdentity(): ActiveQuery
+    public function getIdentity(): ?IdentityInterface
     {
-        return $this->hasOne(\Yii::$app->user->identityClass, ['id' => 'identity_id']);
+        /** @var IdentityInterface $identityClass */
+        $identityClass = \Yii::$app->user->identityClass;
+
+        return $identityClass::find($this->identity_id);
+    }
+
+    /**
+     * @return TokenInterface|null
+     */
+    public function getToken(): ?TokenInterface
+    {
+        /** @var TokenInterface $tokenClass */
+        $tokenClass = \Yii::$app->user->tokenClass;
+
+        return $tokenClass::findByUserId($this->getId());
     }
 }

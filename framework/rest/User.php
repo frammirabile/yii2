@@ -42,11 +42,6 @@ class User extends \yii\web\User
     protected $_identity = false;
 
     /**
-     * @var TokenInterface
-     */
-    protected $_token;
-
-    /**
      * {@inheritdoc}
      *
      * @return void
@@ -59,11 +54,14 @@ class User extends \yii\web\User
         $this->enableSession = false;
         $this->loginUrl = null;
 
+        if (!in_array(UserInterface::class, class_implements($this->modelClass)))
+            throw new InvalidConfigException(\Yii::t('yii', 'User class must implement UserInterface'));
+
         if (!in_array(IdentityInterface::class, class_implements($this->identityClass)))
-            throw new InvalidConfigException(\Yii::t('api', 'Identity class must implement IdentityInterface'));
+            throw new InvalidConfigException(\Yii::t('yii', 'Identity class must implement IdentityInterface'));
 
         if (!in_array(TokenInterface::class, class_implements($this->tokenClass)))
-            throw new InvalidConfigException(\Yii::t('api', 'Token class must implement TokenInterface'));
+            throw new InvalidConfigException(\Yii::t('yii', 'Token class must implement TokenInterface'));
     }
 
     /**
@@ -71,13 +69,13 @@ class User extends \yii\web\User
      */
     public function __toString(): string
     {
-        return StringHelper::basename($this->identityClass).' '.$this->getId();
+        return StringHelper::basename($this->identityClass).' '.$this->getIdentityId();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getIdentity($autoRenew = true)
+    public function getIdentity($autoRenew = true): ?IdentityInterface
     {
         return $this->_identity;
     }
@@ -87,7 +85,7 @@ class User extends \yii\web\User
      */
     public function getToken(): ?TokenInterface
     {
-        return $this->_token;
+        return $this->_this->getToken();
     }
 
     /**
@@ -97,17 +95,17 @@ class User extends \yii\web\User
      */
     public function authenticate(string $username, string $password): bool
     {
-        /** @var IdentityInterface $identityClass */
-        $identityClass = $this->identityClass;
+        /** @var UserInterface $modelClass */
+        $modelClass = $this->modelClass;
 
-        if (($identity = $identityClass::findByUsername($username)) === null || !$identity->validatePassword($password))
-            return false;
+        if (($user = $modelClass::findByUsername($username)) === null || !$user->validatePassword($password))
+            return null;
 
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
-        $this->_token = $tokenClass::findByUser($identity);
+        $this->_token = $tokenClass::findByUser($user);
 
-        return $this->login($identity);
+        return $this->login($user) ? $user : null;
     }
 
     /**

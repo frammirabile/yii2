@@ -70,10 +70,10 @@ class TokenController extends ActiveController
                 \Yii::$app->getResponse()->setStatusCode(201);
             } catch (\Throwable $e) {
                 \Yii::error($e->getMessage(), __METHOD__);
-                throw new ServerErrorHttpException('Token cannot be created');
+                throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be created'));
             }
         elseif (\Yii::$app->getRequest()->getBodyParam('grant_type') == 'refresh_token')
-            throw new ServerErrorHttpException('Token cannot be refreshed');
+            throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be refreshed'));
 
         \Yii::$app->getResponse()->getHeaders()
             ->add('Cache-Control', 'no-store')

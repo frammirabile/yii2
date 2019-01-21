@@ -78,7 +78,14 @@ interface UserInterface
     /**
      * Returns the identity
      *
-     * @return ActiveQuery the identity
+     * @return IdentityInterface|null the identity
      */
-    public function getIdentity(): ActiveQuery;
+    public function getIdentity(): ?IdentityInterface;
+
+    /**
+     * Returns the token
+     *
+     * @return TokenInterface|null the token
+     */
+    public function getToken(): ?TokenInterface;
 }

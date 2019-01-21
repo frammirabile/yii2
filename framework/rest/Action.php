@@ -79,7 +79,7 @@ class Action extends \yii\base\Action
     public function init(): void
     {
         if ($this->modelClass === null)
-            throw new InvalidConfigException(get_class($this).'::$modelClass must be set');
+            throw new InvalidConfigException(\Yii::t('yii', get_class($this).'::$modelClass must be set'));
 
         if (preg_match('/(?:v\d+\/)?((?:\w+\/\d+\/)+)\w+(?:\/\d+)?/', \Yii::$app->getRequest()->getPathInfo(), $matches)) {
             $iterator = (new \ArrayObject(explode('/', trim($matches[1], '/'))))->getIterator();
@@ -90,7 +90,7 @@ class Action extends \yii\base\Action
                 $iterator->next();
 
                 if (($this->primaryModel = $primaryModelClass::findOne(array_combine($primaryModelClass::primaryKey(), (array) $iterator->current()))) === null)
-                    throw new NotFoundHttpException($primaryModelClass::name().' not found');
+                    throw new NotFoundHttpException(\Yii::t('yii', $primaryModelClass::name().' not found'));
 
                 $iterator->next();
                 while ($iterator->valid()) {
@@ -140,6 +140,6 @@ class Action extends \yii\base\Action
         if (isset($model))
             return $model;
 
-        throw new NotFoundHttpException($modelClass::name().' not found');
+        throw new NotFoundHttpException(\Yii::t('yii', $modelClass::name().' not found'));
     }
 }

@@ -74,7 +74,7 @@ class UpdateAction extends Action
         $model->load($this->data ?: \Yii::$app->getRequest()->getBodyParams(), '');
 
         if ($model->save() === false && !$model->hasErrors())
-            throw new ServerErrorHttpException('Model cannot be updated');
+            throw new ServerErrorHttpException(\Yii::t('yii', 'Model cannot be updated'));
 
         return $model;
     }

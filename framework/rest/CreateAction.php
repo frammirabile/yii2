@@ -62,7 +62,7 @@ class CreateAction extends Action
                       ->setStatusCode(201)
                       ->getHeaders()->set('Location', Url::toRoute([$this->viewAction, 'id' => implode(',', array_values($model->getPrimaryKey(true)))], true));
         elseif (!$model->hasErrors())
-            throw new ServerErrorHttpException('Model cannot be created');
+            throw new ServerErrorHttpException(\Yii::t('yii', 'Model cannot be created'));
 
         return $model;
     }
