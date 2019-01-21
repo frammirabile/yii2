@@ -33,10 +33,10 @@ interface TokenInterface
     /**
      * Finds a token by the given refresh one
      *
-     * @param string $refreshToken the refresh token to be looked for
+     * @param string $token the refresh token to be looked for
      * @return self|null the token object that matches the given refresh one
      */
-    public static function findByRefresh(string $refreshToken): ?self;
+    public static function findByRefresh(string $token): ?self;
 
     /**
      * Converts a token object into its string representation

@@ -17,6 +17,14 @@ use yii\db\ActiveQuery;
 interface UserInterface
 {
     /**
+     * Finds a user by the given id
+     *
+     * @param int $id the id to be looked for
+     * @return self|null the user object that matches the given id
+     */
+    public static function find(int $id): ?self;
+
+    /**
      * Finds a user by the given username
      *
      * @param string $username the username to be looked for

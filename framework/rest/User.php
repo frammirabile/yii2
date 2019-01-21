@@ -16,6 +16,8 @@ use yii\helpers\StringHelper;
  * @property-read IdentityInterface|null $identity
  * @property-read TokenInterface|null $token
  *
+ * @method login(IdentityInterface $identity): bool
+ *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  */
@@ -91,9 +93,9 @@ class User extends \yii\web\User
     /**
      * @param string $username
      * @param string $password
-     * @return IdentityInterface
+     * @return IdentityInterface|null
      */
-    public function authenticate(string $username, string $password): bool
+    public function authenticate(string $username, string $password): ?IdentityInterface
     {
         /** @var UserInterface $modelClass */
         $modelClass = $this->modelClass;
@@ -101,28 +103,25 @@ class User extends \yii\web\User
         if (($user = $modelClass::findByUsername($username)) === null || !$user->validatePassword($password))
             return null;
 
-        /** @var TokenInterface $tokenClass */
-        $tokenClass = $this->tokenClass;
-        $this->_token = $tokenClass::findByUser($user);
-
-        return $this->login($user) ? $user : null;
+        return ($identity = $user->getIdentity()) !== null && $this->login($identity) ? $identity : null;
     }
 
     /**
      * @param string $token
-     * @return IdentityInterface
+     * @return IdentityInterface|null
      */
-    public function authenticateByRefreshToken(string $token): bool
+    public function authenticateByRefreshToken(string $token): ?IdentityInterface
     {
-        #tbd verifica token sia scaduto
-
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
 
-        /** @var IdentityInterface $identityClass */
-        $identityClass = $this->identityClass;
+        /** @var UserInterface $modelClass */
+        $modelClass = $this->modelClass;
 
-        return ($this->_token = $tokenClass::findByRefresh($token)) !== null && ($identity = $identityClass::findIdentityByAccessToken($this->_token)) !== null && $this->login($identity);
+        return ($token = $tokenClass::findByRefresh($token)) !== null &&
+               ($user = $modelClass::find($token->getUserId())) !== null &&
+               ($identity = $user->getIdentity()) !== null &&
+               $this->login($identity) ? $identity : null;
     }
 
     /**
@@ -133,18 +132,21 @@ class User extends \yii\web\User
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
 
-        /** @var IdentityInterface $identityClass */
-        $identityClass = $this->identityClass;
+        /** @var UserInterface $modelClass */
+        $modelClass = $this->modelClass;
 
-        return ($this->_token = $tokenClass::findByKey($token)) !== null && ($identity = $identityClass::findIdentityByAccessToken($this->_token, $type)) !== null && $this->login($identity) ? $identity : null;
+        return ($token = $tokenClass::findByString($token)) !== null &&
+               ($user = $modelClass::find($token->getUserId())) !== null &&
+               ($identity = $user->getIdentity()) !== null &&
+               $this->login($identity) ? $identity : null;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getId()
+    public function getId(): int
     {
-        return $this->_user->getId();
+        return $this->_this->getId();
     }
 
     /**
@@ -154,7 +156,7 @@ class User extends \yii\web\User
      */
     public function getUsername(): ?string
     {
-        return $this->_user->getUsername();
+        return $this->_this->getUsername();
     }
 
     /**
@@ -168,7 +170,7 @@ class User extends \yii\web\User
     /**
      * Returns the identity id
      *
-     * @return int
+     * @return int the identity id
      */
     public function getIdentityId(): int
     {

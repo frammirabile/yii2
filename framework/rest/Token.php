@@ -69,7 +69,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public static function findByRefresh(string $refresh): ?TokenInterface
     {
-        return ($token = static::findOne(['refresh' => $refresh])) !== null && $token->isValid() ? $token : null;
+        return ($token = static::findOne(['refresh' => $refresh])) !== null && !$token->isValid() ? $token : null;
     }
 
     /**
