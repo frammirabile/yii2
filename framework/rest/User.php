@@ -131,25 +131,24 @@ class User extends \yii\web\User
     /**
      * @param string $username
      * @param string $password
-     * @return bool
+     * @return IdentityInterface|null
      */
-    public function authenticate(string $username, string $password): bool
+    public function loginByCredentials(string $username, string $password): ?IdentityInterface
     {
         /** @var UserInterface $modelClass */
         $modelClass = $this->modelClass;
 
         if (($user = $modelClass::findByUsername($username)) === null || !$user->validatePassword($password))
-            return false;
+            return null;
 
-        /** @var \yii\web\IdentityInterface $identity */
-        return ($identity = $user->getIdentity()) !== null && $this->login($identity);
+        return ($identity = $user->getIdentity()) !== null && $this->_login($identity) ? $identity : null;
     }
 
     /**
      * @param string $token
-     * @return bool
+     * @return IdentityInterface|null
      */
-    public function authenticateByRefreshToken(string $token): bool
+    public function loginByRefreshToken(string $token): ?IdentityInterface
     {
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
@@ -157,11 +156,10 @@ class User extends \yii\web\User
         /** @var UserInterface $modelClass */
         $modelClass = $this->modelClass;
 
-        /** @var \yii\web\IdentityInterface $identity */
         return ($token = $tokenClass::findByRefresh($token)) !== null &&
                ($user = $modelClass::findById($token->getUserId())) !== null &&
                ($identity = $user->getIdentity()) !== null &&
-               $this->login($identity);
+               $this->_login($identity) ? $identity : null;
     }
 
     /**
@@ -178,7 +176,7 @@ class User extends \yii\web\User
         return ($token = $tokenClass::findByString($token)) !== null &&
                ($user = $modelClass::findById($token->getUserId())) !== null &&
                ($identity = $user->getIdentity()) !== null &&
-               $this->login($identity) ? $identity : null;
+               $this->_login($identity) ? $identity : null;
     }
 
     /**
@@ -207,5 +205,21 @@ class User extends \yii\web\User
     public function getIdentityId(): int
     {
         return $this->_identity->getId() ?? null;
+    }
+
+    /**
+     * @param IdentityInterface $identity
+     * @return bool
+     */
+    private function _login(IdentityInterface $identity): bool
+    {
+        /** @var \yii\web\IdentityInterface $identity */
+        if ($this->beforeLogin($identity, false, 0)) {
+            $this->setIdentity($identity);
+            \Yii::info($this->__toString().' logged in from '.\Yii::$app->request->getUserIP(), __METHOD__);
+            $this->afterLogin($identity, false, 0);
+        }
+
+        return !$this->getIsGuest();
     }
 }
