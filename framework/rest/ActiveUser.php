@@ -51,7 +51,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public static function findById(int $id): ?UserInterface
     {
-        return ($user = self::findOne([self::$idAttribute => $id])) !== null && $user->getIsActive() ? $user : null;
+        return ($user = self::findOne([static::$idAttribute => $id])) !== null && $user->getIsActive() ? $user : null;
     }
 
     /**
@@ -59,7 +59,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public static function findByUsername(string $username): ?UserInterface
     {
-        return ($user = self::findOne([self::$usernameAttribute => $username])) !== null && $user->getIsActive() ? $user : null;
+        return ($user = self::findOne([static::$usernameAttribute => $username])) !== null && $user->getIsActive() ? $user : null;
     }
 
     /**
@@ -67,7 +67,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public static function findByAccessToken(TokenInterface $token, $type = null): ?UserInterface
     {
-        return ($user = static::findOne([self::$idAttribute => $token->getUserId()])) !== null && $user->getIsActive() ? $user : null;
+        return ($user = static::findOne([static::$idAttribute => $token->getUserId()])) !== null && $user->getIsActive() ? $user : null;
     }
 
     /**
