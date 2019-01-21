@@ -133,7 +133,7 @@ class Component extends BaseObject
      */
     public function __get($name)
     {
-        $getter = 'get' . Inflector::camelize($name);
+        $getter = 'get' . $name;
         if (method_exists($this, $getter)) {
             // read property, e.g. getName()
             return $this->$getter();
@@ -174,7 +174,7 @@ class Component extends BaseObject
      */
     public function __set($name, $value)
     {
-        $setter = 'set' . Inflector::camelize($name);
+        $setter = 'set' . $name;
         if (method_exists($this, $setter)) {
             // set property
             $this->$setter($value);

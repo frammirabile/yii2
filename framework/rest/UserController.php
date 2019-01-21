@@ -7,8 +7,11 @@
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
+use yii\db\Exception;
 use yii\filters\auth\{CompositeAuth, HttpBearerAuth};
 use yii\helpers\Inflector;
+use yii\web\NotFoundHttpException;
+use yii\web\ServerErrorHttpException;
 
 /**
  * Rest user controller
@@ -19,6 +22,16 @@ use yii\helpers\Inflector;
 class UserController extends ActiveController
 {
     /**
+     * {@inheritdoc}
+     */
+    public function init(): void
+    {
+        $this->modelClass = \Yii::$app->user->identityClass;
+
+        parent::init();
+    }
+
+    /**
      * @return IdentityInterface|null
      */
     public function actionViewMe(): ?IdentityInterface
@@ -27,29 +40,39 @@ class UserController extends ActiveController
     }
 
     /**
+     * @param null|string $property
+     * @param null|mixed $value
      * @return IdentityInterface
+     * @throws Exception
      * @throws InvalidConfigException
+     * @throws NotFoundHttpException
+     * @throws ServerErrorHttpException
      */
-    public function actionUpdateMe(): IdentityInterface
+    public function actionUpdateMe(?string $property = null, ? $value = null): IdentityInterface
     {
-        return ($action = \Yii::createObject([
-            'class' => UpdateAction::class,
-            'modelClass' => \Yii::$app->user->identityClass,
-            'scenario' => $this->updateMeScenario,
-            'data' => $this->data
-        ], [$this->id, $this]))->run(\Yii::$app->user->getId());
+        /** @var UpdateAction $action */
+        $action = $this->createAction('update');
+
+        if ($property !== null)
+            $action->data = [$property => $value ?: \Yii::$app->getRequest()->getRawBody()];
+
+        /** @var IdentityInterface $identity */
+        $identity = $action->run(\Yii::$app->user->getIdentityId());
+
+        return $identity;
     }
 
     /**
      * @return void
      * @throws InvalidConfigException
+     * @throws NotFoundHttpException
+     * @throws ServerErrorHttpException
      */
     public function actionDeleteMe(): void
     {
-        \Yii::createObject([
-            'class' => DeleteAction::class,
-            'modelClass' => \Yii::$app->user->identityClass,
-        ], [$this->id, $this->controller])->run(\Yii::$app->user->getId());
+        /** @var DeleteAction $action */
+        $action = $this->createAction('delete');
+        $action->run(\Yii::$app->user->getIdentityId());
     }
 
     /**
@@ -58,40 +81,36 @@ class UserController extends ActiveController
      */
     public function actionViewMy(string $property)
     {
-        return method_exists($this, $getter = 'get'.Inflector::camelize($property))
-            ? $this->$getter()
-            : \Yii::$app->user->getIdentity()->$property;
+        /** @var ActiveRecord $identity */
+        $identity = ($user = \Yii::$app->user)->getIdentity();
+
+        return $identity->canGetProperty($property) ? $identity->$property : $user->$property;
     }
 
     /**
      * @param string $property
+     * @param null|mixed $value
      * @return IdentityInterface
+     * @throws Exception
      * @throws InvalidConfigException
+     * @throws NotFoundHttpException
+     * @throws ServerErrorHttpException
      */
-    public function actionUpdateMy(string $property): IdentityInterface
+    public function actionUpdateMy(string $property, ? $value = null): IdentityInterface
     {
-        return ($action = \Yii::createObject([
-            'class' => UpdateAction::class,
-            'modelClass' => \Yii::$app->user->identityClass,
-            'scenario' => $this->updateScenario,
-            'data' => [$property => \Yii::$app->getRequest()->getRawBody()]
-        ], [$this->id, $this]))->run(\Yii::$app->user->getId());
+        return $this->actionUpdateMe($property, $value);
     }
 
     /**
-     * @return string
+     * @return IdentityInterface
+     * @throws Exception
      * @throws InvalidConfigException
+     * @throws NotFoundHttpException
+     * @throws ServerErrorHttpException
      */
-    public function getActivation(): string
+    public function actionViewMyActivation(): IdentityInterface
     {
-        \Yii::createObject([
-            'class' => UpdateAction::class,
-            'checkAccess' => [$this, 'checkAccess'],
-            'modelClass' => \Yii::$app->user->identityClass,
-            'scenario' => ActiveUser::SCENARIO_ACTIVATE_ME,
-            'data' => ['active' => 1],
-            'on afterRun' => [$this, 'afterActivation']
-        ], [$this->id, $this])->run(\Yii::$app->user->getId());
+        return $this->actionUpdateMy('active', 1, [$this, 'afterActivation']);
     }
 
     /**

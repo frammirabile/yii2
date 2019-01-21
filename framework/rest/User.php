@@ -7,6 +7,7 @@
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
+use yii\base\UnknownPropertyException;
 use yii\helpers\StringHelper;
 
 /**
@@ -67,11 +68,43 @@ class User extends \yii\web\User
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function __get($name)
+    {
+        return isset($name) ? parent::__get($name) : $this->_identity->$name;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __isset($name): bool
+    {
+        return parent::__isset($name) || isset($this->_identity->$name);
+    }
+
+    /**
      * @return string
      */
     public function __toString(): string
     {
         return StringHelper::basename($this->identityClass).' '.$this->getIdentityId();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasProperty($name, $checkVars = true, $checkBehaviors = true): bool
+    {
+        return parent::hasProperty($name, $checkVars, $checkBehaviors);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function canGetProperty($name, $checkVars = true, $checkBehaviors = true): bool
+    {
+        return parent::canGetProperty($name, $checkVars, $checkBehaviors);
     }
 
     /**
@@ -157,14 +190,6 @@ class User extends \yii\web\User
     public function getUsername(): ?string
     {
         return $this->_this->getUsername();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIsGuest(): bool
-    {
-        return $this->_identity === false;
     }
 
     /**

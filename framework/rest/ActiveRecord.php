@@ -65,70 +65,6 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
 
     /**
      * {@inheritdoc}
-     */
-    public function __get($name)
-    {
-        try {
-            return parent::__get($name);
-        } catch (UnknownPropertyException $e) {
-            if (!$this->hasDependency($name))
-                throw $e;
-
-            list($class, $primaryKey, $multiple) = $this->_dependencies[$name];
-
-            return $this->_related[$name] ?? ($this->isNewRecord ? null : ($this->_related[$name] = ($this->{'has'.($multiple ? 'Many' : 'One')}($class, [$primaryKey => 'id']))->{$multiple ? 'all' : 'one'}()));
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return void
-     */
-    public function __set($name, $value): void
-    {
-        try {
-            parent::__set($name, $value);
-        } catch (UnknownPropertyException $e) {
-            if (!$this->hasDependency($name))
-                throw $e;
-
-            list($class, , $multiple) = $this->_dependencies[$name];
-
-            if ($value instanceof $class || $value === null)
-                $this->_related[$name] = $value;
-            elseif ($multiple)
-                $this->_related[$name] = array_map(function($data) use($class) {
-                    return new $class(['scenario' => self::SCENARIO_CREATE, 'attributes' => $data]);
-                }, $value);
-            else {
-                if (!isset($this->_related[$name]))
-                    $this->_related[$name] = $this->isNewRecord ? new $class(['scenario' => self::SCENARIO_CREATE]) : $this->$name;
-
-                $this->_related[$name]->load($value, '');
-            }
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return void
-     */
-    public function __unset($name): void
-    {
-        try {
-            parent::__unset($name);
-        } catch (InvalidCallException $e) {
-            if (!$this->hasDependency($name))
-                throw $e;
-
-            $this->_related[$name] = null;
-        }
-    }
-
-    /**
-     * {@inheritdoc}
      *
      * @return void
      */
@@ -140,6 +76,58 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
             ];
 
         parent::init();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __get($name)
+    {
+        if (!$this->hasDependency($name))
+            return parent::__get($name);
+
+        list($class, $primaryKey, $multiple) = $this->_dependencies[$name];
+
+        return $this->_related[$name] ?? ($this->isNewRecord ? null : ($this->_related[$name] = ($this->{'has'.($multiple ? 'Many' : 'One')}($class, [$primaryKey => 'id']))->{$multiple ? 'all' : 'one'}()));
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return void
+     */
+    public function __set($name, $value): void
+    {
+        if (!$this->hasDependency($name))
+            parent::__set($name, $value);
+
+        list($class, , $multiple) = $this->_dependencies[$name];
+
+        if ($value instanceof $class || $value === null)
+            $this->_related[$name] = $value;
+        elseif ($multiple)
+            $this->_related[$name] = array_map(function($data) use($class) {
+                return new $class(['scenario' => self::SCENARIO_CREATE, 'attributes' => $data]);
+            }, $value);
+        else {
+            if (!isset($this->_related[$name]))
+                $this->_related[$name] = $this->isNewRecord ? new $class(['scenario' => self::SCENARIO_CREATE]) : $this->$name;
+
+            $this->_related[$name]->load($value, '');
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return void
+     */
+    public function __unset($name): void
+    {
+        if (!$this->hasDependency($name))
+            parent::__unset($name);
+
+        $this->_related[$name] = null;
     }
 
     /**
