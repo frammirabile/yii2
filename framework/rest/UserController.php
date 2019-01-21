@@ -6,11 +6,9 @@
 
 namespace yii\rest;
 
-use yii\base\{ActionEvent, InvalidConfigException};
-use yii\db\ActiveRecordInterface;
+use yii\base\InvalidConfigException;
 use yii\filters\auth\{CompositeAuth, HttpBearerAuth};
 use yii\helpers\Inflector;
-use yii\web\NotFoundHttpException;
 
 /**
  * Rest user controller
@@ -21,11 +19,6 @@ use yii\web\NotFoundHttpException;
 class UserController extends ActiveController
 {
     /**
-     * @var string the scenario used for updating the current user
-     */
-    protected $updateMeScenario = ActiveUser::SCENARIO_UPDATE_ME;
-
-    /**
      * @return IdentityInterface|null
      */
     public function actionViewMe(): ?IdentityInterface
@@ -34,10 +27,10 @@ class UserController extends ActiveController
     }
 
     /**
-     * @return ActiveRecordInterface
+     * @return IdentityInterface
      * @throws InvalidConfigException
      */
-    public function actionUpdateMe(): ActiveRecordInterface
+    public function actionUpdateMe(): IdentityInterface
     {
         return ($action = \Yii::createObject([
             'class' => UpdateAction::class,
@@ -72,15 +65,15 @@ class UserController extends ActiveController
 
     /**
      * @param string $property
-     * @return ActiveRecordInterface
+     * @return IdentityInterface
      * @throws InvalidConfigException
      */
-    public function actionUpdateMy(string $property): ActiveRecordInterface
+    public function actionUpdateMy(string $property): IdentityInterface
     {
         return ($action = \Yii::createObject([
             'class' => UpdateAction::class,
             'modelClass' => \Yii::$app->user->identityClass,
-            'scenario' => $this->updateMeScenario,
+            'scenario' => $this->updateScenario,
             'data' => [$property => \Yii::$app->getRequest()->getRawBody()]
         ], [$this->id, $this]))->run(\Yii::$app->user->getId());
     }
@@ -118,53 +111,6 @@ class UserController extends ActiveController
     }
 
     /**
-     * @param string $username
-     * @return void
-     * @throws NotFoundHttpException
-     */
-    public function actionCreateRefreshPassword(string $username): void
-    {
-        /** @var IdentityInterface $userClass */
-        $userClass = $this->modelClass;
-
-        if (($user = $userClass::findByUsername($username)) === null)
-            throw new NotFoundHttpException;
-
-        #tbd invio mail con frammirabile/yii2-notification
-    }
-
-    /**
-     * @param string $username
-     * @return IdentityInterface|null
-     * @throws InvalidConfigException
-     * @throws NotFoundHttpException
-     */
-    public function actionRefreshPassword(string $username): ?IdentityInterface
-    {
-        /** @var IdentityInterface $userClass */
-        $userClass = $this->modelClass;
-
-        /** @var ActiveRecord|IdentityInterface $user */
-        if (($user = $userClass::findByUsername($username)) === null)
-            throw new NotFoundHttpException;
-
-        $refreshPassword = \Yii::$app->getRequest()->get('refresh_password');
-
-        if ($refreshPassword === null || $refreshPassword != $user->getResetPassword())
-            $user->addError('refresh_password', 'Invalid refresh_password');
-        else
-            $user = \Yii::createObject([
-                'class' => UpdateAction::class,
-                'modelClass' => $this->modelClass,
-                'scenario' => ActiveUser::SCENARIO_RESET_PASSWORD,
-            ], [ActiveUser::SCENARIO_UPDATE, $this])->run($user->getId());
-
-        #tbd test codici 401 e 403
-
-        return $user->hasErrors() ? $user : null; #tbd automatizzare codice di ritorno in base a risposta: null -> 204, hasErrors() -> 422, altrimenti 200
-    }
-
-    /**
      * {@inheritdoc}
      */
     protected function authMethods(): array
@@ -187,32 +133,4 @@ class UserController extends ActiveController
             ]
         ];
     }
-
-    /**
-     * {@inheritdoc}
-     * @throws InvalidConfigException
-     * @throws NotFoundHttpException
-     * @throws ServerErrorHttpException
-     *
-     * @tdb
-     */
-    public function actionInitPasswordReset(string $username): void
-    {
-        /** @var IdentityInterface $userClass */
-        $userClass = $this->modelClass;
-
-        if (($user = $userClass::findByUsername($username)) === null)
-            throw new NotFoundHttpException;
-
-        MailHelper::sendHtmlMail('resetPassword', \Yii::t('api', 'Reset your password'), 'support-noreplay', $user->getEmail(), ['user' => $user]);
-    }
-
-    /**
-     * @param ActionEvent $event
-     * @return void
-     */
-    protected function afterActivation(ActionEvent $event): void {}
-
-    #$this->redirect('https://www.'.Url::domain().'/verification?l='.\Yii::$app->getRequest()->get('lang', \Yii::$app->language).'&r='.intval($event->result->hasErrors()));
-
 }
