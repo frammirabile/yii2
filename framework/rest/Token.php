@@ -1,7 +1,7 @@
 <?php
 /**
  * @link https://github.com/frammirabile/yii2
- * @copyright Copyright (c) 2018 Francesco Ammirabile <frammirabile@gmail.com>
+ * @copyright Copyright (c) 2019 Francesco Ammirabile <frammirabile@gmail.com>
  */
 
 namespace yii\rest;

@@ -1,14 +1,12 @@
 <?php
 /**
  * @link https://github.com/frammirabile/yii2
- * @copyright Copyright (c) 2018 Francesco Ammirabile <frammirabile@gmail.com>
+ * @copyright Copyright (c) 2019 Francesco Ammirabile <frammirabile@gmail.com>
  */
 
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
-use yii\filters\auth\AuthMethod;
-use yii\web\UnauthorizedHttpException;
 
 /**
  * OAuth2 authentication
@@ -16,36 +14,21 @@ use yii\web\UnauthorizedHttpException;
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  */
-class HttpOAuth2 extends AuthMethod
+class HttpOAuth2 extends HttpClientAuth
 {
     /**
-     * @var string the HTTP authentication realm
-     */
-    public $realm = 'api';
-
-    /**
-     * Authenticates the current user
-     *
-     * @param User $user
-     * @param Request $request
-     * @param Response $response
-     * @return IdentityInterface|null
+     * {@inheritdoc}
      * @throws InvalidConfigException
-     * @throws UnauthorizedHttpException
      */
-    public function authenticate($user, $request, $response): ?IdentityInterface
+    public function authenticate($user, $request, $response): ?bool
     {
-        list($id, $secret) = $request->getAuthCredentials();
-
-        if ((\Yii::$app->request->client = Client::findOne(['id' => $id, 'secret' => $secret])) === null)
+        if (parent::authenticate($user, $request, $response) === null)
             return null;
 
         $request = \Yii::$app->getRequest()->getBodyParams();
 
         if (!isset($request['grant_type']))
             return null;
-
-        $identity = null;
 
         switch ($request['grant_type']) {
             case 'password':
@@ -58,10 +41,12 @@ class HttpOAuth2 extends AuthMethod
                     $identity = $user->authenticateByRefreshToken($request['refresh_token']);
         }
 
-        if ($identity === null)
-            $this->handleFailure($response);
+        if (isset($identity))
+            return true;
 
-        return $identity;
+        $this->handleFailure($response);
+
+        return false;
     }
 
     /**

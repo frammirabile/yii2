@@ -1,17 +1,15 @@
 <?php
 /**
  * @link https://github.com/frammirabile/yii2
- * @copyright Copyright (c) 2018 Francesco Ammirabile <frammirabile@gmail.com>
+ * @copyright Copyright (c) 2019 Francesco Ammirabile <frammirabile@gmail.com>
  */
 
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
 use yii\db\Exception;
-use yii\filters\auth\{CompositeAuth, HttpBearerAuth};
-use yii\helpers\Inflector;
-use yii\web\NotFoundHttpException;
-use yii\web\ServerErrorHttpException;
+use yii\filters\auth\{CompositeAuth, HttpBearerAuth, QueryParamAuth};
+use yii\web\{NotFoundHttpException, ServerErrorHttpException};
 
 /**
  * Rest user controller
@@ -116,13 +114,12 @@ class UserController extends ActiveController
     protected function verbs(): array
     {
         return [
+            'create' => ['POST'],
             'view-me' => ['GET', 'HEAD'],
             'update-me' => ['PUT', 'PATCH'],
             'delete-me' => ['DELETE'],
             'view-my' => ['GET', 'HEAD'],
-            'update-my' => ['PUT', 'PATCH'],
-            'create-refreshPassword' => ['POST'],
-            'refresh-password' => ['PUT']
+            'update-my' => ['PUT', 'PATCH']
         ];
     }
 
@@ -134,18 +131,18 @@ class UserController extends ActiveController
         return [
             'class' => CompositeAuth::class,
             'authMethods' => [
-                'bearer' => [
+                [
                     'class' => HttpBearerAuth::class,
-                    'only' => ['*-me']
-                ]/* tbd,
-                'header' => [
-                    'class' => HttpBasicAuth::class,
-                    'only' => ['create', 'init-password-refresh', 'update-password']
+                    'only' => ['*-me', '*-my']
                 ],
-                'query' => [
+                [
+                    'class' => HttpClientAuth::class,
+                    'only' => ['create']
+                ],
+                [
                     'class' => QueryParamAuth::class,
                     'only' => ['activate']
-                ]*/
+                ]
             ]
         ];
     }
