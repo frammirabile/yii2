@@ -7,6 +7,7 @@
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
+use yii\web\UnauthorizedHttpException;
 
 /**
  * OAuth2 authentication
@@ -17,8 +18,14 @@ use yii\base\InvalidConfigException;
 class HttpOAuth2 extends HttpClientAuth
 {
     /**
-     * {@inheritdoc}
+     * Authenticates the user
+     *
+     * @param User $user
+     * @param Request $request
+     * @param Response $response
+     * @return bool|null
      * @throws InvalidConfigException
+     * @throws UnauthorizedHttpException
      */
     public function authenticate($user, $request, $response): ?bool
     {

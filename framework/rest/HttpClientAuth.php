@@ -18,7 +18,7 @@ use yii\web\UnauthorizedHttpException;
 class HttpClientAuth extends HttpBasicAuth
 {
     /**
-     * Authenticates the current client
+     * Authenticates the client
      *
      * @param User $user
      * @param Request $request

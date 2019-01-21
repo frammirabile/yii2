@@ -42,9 +42,9 @@ class User extends \yii\web\User
     protected $_this;
 
     /**
-     * @var IdentityInterface|false
+     * @var IdentityInterface|null
      */
-    protected $_identity = false;
+    protected $_identity;
 
     /**
      * {@inheritdoc}

@@ -133,7 +133,7 @@ class Component extends BaseObject
      */
     public function __get($name)
     {
-        $getter = 'get' . $name;
+        $getter = 'get' . Inflector::camelize($name);
         if (method_exists($this, $getter)) {
             // read property, e.g. getName()
             return $this->$getter();
@@ -147,7 +147,7 @@ class Component extends BaseObject
             }
         }
 
-        if (method_exists($this, 'set' . $name)) {
+        if (method_exists($this, 'set' . Inflector::camelize($name))) {
             throw new InvalidCallException('Getting write-only property: ' . get_class($this) . '::' . $name);
         }
 
@@ -174,7 +174,7 @@ class Component extends BaseObject
      */
     public function __set($name, $value)
     {
-        $setter = 'set' . $name;
+        $setter = 'set' . Inflector::camelize($name);
         if (method_exists($this, $setter)) {
             // set property
             $this->$setter($value);
@@ -202,7 +202,7 @@ class Component extends BaseObject
             }
         }
 
-        if (method_exists($this, 'get' . $name)) {
+        if (method_exists($this, 'get' . Inflector::camelize($name))) {
             throw new InvalidCallException('Setting read-only property: ' . get_class($this) . '::' . $name);
         }
 

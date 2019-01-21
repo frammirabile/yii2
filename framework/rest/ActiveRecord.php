@@ -100,20 +100,21 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     {
         if (!$this->hasDependency($name))
             parent::__set($name, $value);
-
-        list($class, , $multiple) = $this->_dependencies[$name];
-
-        if ($value instanceof $class || $value === null)
-            $this->_related[$name] = $value;
-        elseif ($multiple)
-            $this->_related[$name] = array_map(function($data) use($class) {
-                return new $class(['scenario' => self::SCENARIO_CREATE, 'attributes' => $data]);
-            }, $value);
         else {
-            if (!isset($this->_related[$name]))
-                $this->_related[$name] = $this->isNewRecord ? new $class(['scenario' => self::SCENARIO_CREATE]) : $this->$name;
+            list($class, , $multiple) = $this->_dependencies[$name];
 
-            $this->_related[$name]->load($value, '');
+            if ($value instanceof $class || $value === null)
+                $this->_related[$name] = $value;
+            elseif ($multiple)
+                $this->_related[$name] = array_map(function($data) use($class) {
+                    return new $class(['scenario' => self::SCENARIO_CREATE, 'attributes' => $data]);
+                }, $value);
+            else {
+                if (!isset($this->_related[$name]))
+                    $this->_related[$name] = $this->isNewRecord ? new $class(['scenario' => self::SCENARIO_CREATE]) : $this->$name;
+
+                $this->_related[$name]->load($value, '');
+            }
         }
     }
 
@@ -124,10 +125,9 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      */
     public function __unset($name): void
     {
-        if (!$this->hasDependency($name))
-            parent::__unset($name);
-
-        $this->_related[$name] = null;
+        !$this->hasDependency($name)
+            ? parent::__unset($name)
+            : $this->_related[$name] = null;
     }
 
     /**

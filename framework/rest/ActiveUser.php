@@ -49,7 +49,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public static function findByUsername(string $username): ?UserInterface
     {
-        return self::findOne(['username' => $username, 'isActive' => true]);
+        return ($user = self::findOne(['username' => $username])) !== null && $user->isActive ? $user : null;
     }
 
     /**
@@ -57,7 +57,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public static function findByAccessToken(TokenInterface $token, $type = null): ?UserInterface
     {
-        return static::findOne(['id' => $token->getUserId(), 'isActive' => true]);
+        return ($user = static::findOne(['id' => $token->getUserId()])) !== null && $user->isActive ? $user : null;
     }
 
     /**
@@ -65,7 +65,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function behaviors(): array
     {
-        return array_merge(parent::behaviors(), [TimestampBehavior::class]);
+        return [TimestampBehavior::class];
     }
 
     /**
