@@ -46,7 +46,7 @@ class HttpOAuth2 extends HttpClientAuth
 
         $this->handleFailure($response);
 
-        return false;
+        return null;
     }
 
     /**
