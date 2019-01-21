@@ -48,18 +48,9 @@ class UserController extends ActiveController
      * @throws NotFoundHttpException
      * @throws ServerErrorHttpException
      */
-    public function actionUpdateMe(?string $property = null, ? $value = null): IdentityInterface
+    public function actionUpdateMe(): IdentityInterface
     {
-        /** @var UpdateAction $action */
-        $action = $this->createAction('update');
-
-        if ($property !== null)
-            $action->data = [$property => $value ?: \Yii::$app->getRequest()->getRawBody()];
-
-        /** @var IdentityInterface $identity */
-        $identity = $action->run(\Yii::$app->user->getIdentityId());
-
-        return $identity;
+        return $this->actionUpdateMy(null);
     }
 
     /**
@@ -85,7 +76,7 @@ class UserController extends ActiveController
     }
 
     /**
-     * @param string $property
+     * @param string|null $property
      * @param null|mixed $value
      * @return IdentityInterface
      * @throws Exception
@@ -93,21 +84,30 @@ class UserController extends ActiveController
      * @throws NotFoundHttpException
      * @throws ServerErrorHttpException
      */
-    public function actionUpdateMy(string $property, ? $value = null): IdentityInterface
+    public function actionUpdateMy(?string $property, ? $value = null): IdentityInterface
     {
-        return $this->actionUpdateMe($property, $value);
+        /** @var UpdateAction $action */
+        $action = $this->createAction('update');
+
+        if ($property !== null)
+            $action->data = [$property => $value ?: \Yii::$app->getRequest()->getRawBody()];
+
+        /** @var IdentityInterface $identity */
+        $identity = $action->run(\Yii::$app->user->getIdentityId());
+
+        return $identity;
     }
 
     /**
-     * @return IdentityInterface
+     * @return void
      * @throws Exception
      * @throws InvalidConfigException
      * @throws NotFoundHttpException
      * @throws ServerErrorHttpException
      */
-    public function actionViewMyActivation(): IdentityInterface
+    public function actionViewMyActivation(): void
     {
-        return $this->actionUpdateMy('active', 1, [$this, 'afterActivation']);
+        $this->actionUpdateMy('active', 1);
     }
 
     /**
