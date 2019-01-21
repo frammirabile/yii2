@@ -20,7 +20,7 @@ interface IdentityInterface
      * @param int $id the id to be looked for
      * @return self|null the identity object that matches the given id
      */
-    public static function find(int $id): ?self;
+    public static function findById(int $id): ?self;
 
     /**
      * Returns the id that uniquely identifies an identity

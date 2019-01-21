@@ -39,6 +39,14 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      */
+    public static function findById(int $id): ?UserInterface
+    {
+        return self::findOne(['id' => $id, 'isActive' => true]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public static function findByUsername(string $username): ?UserInterface
     {
         return self::findOne(['username' => $username, 'isActive' => true]);
@@ -180,7 +188,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
         /** @var IdentityInterface $identityClass */
         $identityClass = \Yii::$app->user->identityClass;
 
-        return $identityClass::find($this->identity_id);
+        return $identityClass::findById($this->identity_id);
     }
 
     /**

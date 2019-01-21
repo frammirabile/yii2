@@ -119,7 +119,7 @@ class User extends \yii\web\User
         $modelClass = $this->modelClass;
 
         return ($token = $tokenClass::findByRefresh($token)) !== null &&
-               ($user = $modelClass::find($token->getUserId())) !== null &&
+               ($user = $modelClass::findById($token->getUserId())) !== null &&
                ($identity = $user->getIdentity()) !== null &&
                $this->login($identity) ? $identity : null;
     }
@@ -136,7 +136,7 @@ class User extends \yii\web\User
         $modelClass = $this->modelClass;
 
         return ($token = $tokenClass::findByString($token)) !== null &&
-               ($user = $modelClass::find($token->getUserId())) !== null &&
+               ($user = $modelClass::findById($token->getUserId())) !== null &&
                ($identity = $user->getIdentity()) !== null &&
                $this->login($identity) ? $identity : null;
     }

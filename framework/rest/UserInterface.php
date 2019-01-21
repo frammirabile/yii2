@@ -22,7 +22,7 @@ interface UserInterface
      * @param int $id the id to be looked for
      * @return self|null the user object that matches the given id
      */
-    public static function find(int $id): ?self;
+    public static function findById(int $id): ?self;
 
     /**
      * Finds a user by the given username
