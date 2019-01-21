@@ -18,9 +18,9 @@ interface IdentityInterface
      * Finds an identity by the given id
      *
      * @param int $id the id to be looked for
-     * @return self|null the identity object that matches the given id
+     * @return IdentityInterface|null the identity object that matches the given id
      */
-    public static function findById(int $id): ?self;
+    public static function findById(int $id): ?IdentityInterface;
 
     /**
      * Returns the id that uniquely identifies an identity

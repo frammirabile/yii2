@@ -6,7 +6,7 @@
 
 namespace yii\rest;
 
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidConfigException, InvalidValueException};
 use yii\helpers\StringHelper;
 
 /**
@@ -18,7 +18,6 @@ use yii\helpers\StringHelper;
  * @property-read IdentityInterface|null $identity
  * @property-read TokenInterface|null $token
  *
- * @method setIdentity(IdentityInterface $identity)
  * @method beforeLogin(IdentityInterface $identity, $cookieBased, $duration)
  * @method afterLogin(IdentityInterface $identity, $cookieBased, $duration)
  *
@@ -122,6 +121,17 @@ class User extends \yii\web\User
     public function getIdentity($autoRenew = false): ?IdentityInterface
     {
         return $this->_identity;
+    }
+
+    /**
+     * @param IdentityInterface $identity
+     */
+    public function setIdentity($identity): void
+    {
+        if (!($identity instanceof IdentityInterface))
+            throw new InvalidValueException('The identity object must implement IdentityInterface');
+
+        $this->_identity = $identity;
     }
 
     /**
