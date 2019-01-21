@@ -24,7 +24,7 @@ class TokenController extends ActiveController
     public $serializer = [
         'class' => Serializer::class,
         'variablizeKeys' => false,
-        'keysReplacement' => null
+        'keysReplacements' => null
     ];
 
     /**

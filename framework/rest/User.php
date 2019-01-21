@@ -152,10 +152,10 @@ class User extends \yii\web\User
         /** @var UserInterface $modelClass */
         $modelClass = $this->modelClass;
 
-        if (($user = $modelClass::findByUsername($username)) === null || !$user->validatePassword($password))
+        if (($this->_this = $modelClass::findByUsername($username)) === null || !$this->_this->validatePassword($password))
             return null;
 
-        return ($identity = $user->getIdentity()) !== null && $this->_login($identity) ? $identity : null;
+        return ($identity = $this->_this->getIdentity()) !== null && $this->_login($identity) ? $identity : null;
     }
 
     /**
@@ -171,8 +171,8 @@ class User extends \yii\web\User
         $modelClass = $this->modelClass;
 
         return ($token = $tokenClass::findByRefresh($token)) !== null &&
-               ($user = $modelClass::findById($token->getUserId())) !== null &&
-               ($identity = $user->getIdentity()) !== null &&
+               ($this->_this = $modelClass::findById($token->getUserId())) !== null &&
+               ($identity = $this->_this->getIdentity()) !== null &&
                $this->_login($identity) ? $identity : null;
     }
 
@@ -188,8 +188,8 @@ class User extends \yii\web\User
         $modelClass = $this->modelClass;
 
         return ($token = $tokenClass::findByString($token)) !== null &&
-               ($user = $modelClass::findById($token->getUserId())) !== null &&
-               ($identity = $user->getIdentity()) !== null &&
+               ($this->_this = $modelClass::findById($token->getUserId())) !== null &&
+               ($identity = $this->_this->getIdentity()) !== null &&
                $this->_login($identity) ? $identity : null;
     }
 
