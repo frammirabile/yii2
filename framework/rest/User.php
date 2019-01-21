@@ -18,6 +18,10 @@ use yii\helpers\StringHelper;
  * @property-read IdentityInterface|null $identity
  * @property-read TokenInterface|null $token
  *
+ * @method setIdentity(IdentityInterface $identity)
+ * @method beforeLogin(IdentityInterface $identity, $cookieBased, $duration)
+ * @method afterLogin(IdentityInterface $identity, $cookieBased, $duration)
+ *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  */
@@ -115,7 +119,7 @@ class User extends \yii\web\User
     /**
      * {@inheritdoc}
      */
-    public function getIdentity($autoRenew = true): ?IdentityInterface
+    public function getIdentity($autoRenew = false): ?IdentityInterface
     {
         return $this->_identity;
     }
@@ -213,7 +217,6 @@ class User extends \yii\web\User
      */
     private function _login(IdentityInterface $identity): bool
     {
-        /** @var \yii\web\IdentityInterface $identity */
         if ($this->beforeLogin($identity, false, 0)) {
             $this->setIdentity($identity);
             \Yii::info($this->__toString().' logged in from '.\Yii::$app->request->getUserIP(), __METHOD__);
