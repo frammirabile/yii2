@@ -7,7 +7,6 @@
 namespace yii\rest;
 
 use yii\base\InvalidConfigException;
-use yii\base\UnknownPropertyException;
 use yii\helpers\StringHelper;
 
 /**
@@ -18,8 +17,6 @@ use yii\helpers\StringHelper;
  * @property-read int $identity_id
  * @property-read IdentityInterface|null $identity
  * @property-read TokenInterface|null $token
- *
- * @method login(IdentityInterface $identity): bool
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
@@ -134,24 +131,25 @@ class User extends \yii\web\User
     /**
      * @param string $username
      * @param string $password
-     * @return IdentityInterface|null
+     * @return bool
      */
-    public function authenticate(string $username, string $password): ?IdentityInterface
+    public function authenticate(string $username, string $password): bool
     {
         /** @var UserInterface $modelClass */
         $modelClass = $this->modelClass;
 
         if (($user = $modelClass::findByUsername($username)) === null || !$user->validatePassword($password))
-            return null;
+            return false;
 
-        return ($identity = $user->getIdentity()) !== null && $this->login($identity) ? $identity : null;
+        /** @var \yii\web\IdentityInterface $identity */
+        return ($identity = $user->getIdentity()) !== null && $this->login($identity);
     }
 
     /**
      * @param string $token
-     * @return IdentityInterface|null
+     * @return bool
      */
-    public function authenticateByRefreshToken(string $token): ?IdentityInterface
+    public function authenticateByRefreshToken(string $token): bool
     {
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
@@ -159,10 +157,11 @@ class User extends \yii\web\User
         /** @var UserInterface $modelClass */
         $modelClass = $this->modelClass;
 
+        /** @var \yii\web\IdentityInterface $identity */
         return ($token = $tokenClass::findByRefresh($token)) !== null &&
                ($user = $modelClass::findById($token->getUserId())) !== null &&
                ($identity = $user->getIdentity()) !== null &&
-               $this->login($identity) ? $identity : null;
+               $this->login($identity);
     }
 
     /**

@@ -40,15 +40,15 @@ class HttpOAuth2 extends HttpClientAuth
         switch ($request['grant_type']) {
             case 'password':
                 if (isset($request['username'], $request['password']))
-                    $identity = $user->authenticate($request['username'], $request['password']);
+                    $auth = $user->authenticate($request['username'], $request['password']);
 
                 break;
             case 'refresh_token':
                 if (isset($request['refresh_token']))
-                    $identity = $user->authenticateByRefreshToken($request['refresh_token']);
+                    $auth = $user->authenticateByRefreshToken($request['refresh_token']);
         }
 
-        if (isset($identity))
+        if (!empty($auth))
             return true;
 
         $this->handleFailure($response);
