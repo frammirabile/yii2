@@ -82,7 +82,7 @@ class UserController extends ActiveController
      * @throws NotFoundHttpException
      * @throws ServerErrorHttpException
      */
-    public function actionUpdateMy(?string $property, ? $value = null): IdentityInterface
+    public function actionUpdateMy(?string $property, $value = null): IdentityInterface
     {
         /** @var UpdateAction $action */
         $action = $this->createAction('update');

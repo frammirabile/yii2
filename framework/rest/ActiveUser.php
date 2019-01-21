@@ -29,6 +29,16 @@ use yii\behaviors\TimestampBehavior;
 class ActiveUser extends ActiveRecord implements UserInterface
 {
     /**
+     * @var string the id attribute
+     */
+    protected static $idAttribute = 'id';
+
+    /**
+     * @var string the username attribute
+     */
+    protected static $usernameAttribute = 'username';
+
+    /**
      * {@inheritdoc}
      */
     public static function tableName(): string
@@ -41,7 +51,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public static function findById(int $id): ?UserInterface
     {
-        return self::findOne(['id' => $id, 'isActive' => true]);
+        return ($user = self::findOne([self::$idAttribute => $id])) !== null && $user->getIsActive() ? $user : null;
     }
 
     /**
@@ -49,7 +59,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public static function findByUsername(string $username): ?UserInterface
     {
-        return ($user = self::findOne(['username' => $username])) !== null && $user->isActive ? $user : null;
+        return ($user = self::findOne([self::$usernameAttribute => $username])) !== null && $user->getIsActive() ? $user : null;
     }
 
     /**
@@ -57,7 +67,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public static function findByAccessToken(TokenInterface $token, $type = null): ?UserInterface
     {
-        return ($user = static::findOne(['id' => $token->getUserId()])) !== null && $user->isActive ? $user : null;
+        return ($user = static::findOne([self::$idAttribute => $token->getUserId()])) !== null && $user->getIsActive() ? $user : null;
     }
 
     /**
