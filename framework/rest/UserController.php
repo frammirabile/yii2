@@ -38,8 +38,6 @@ class UserController extends ActiveController
     }
 
     /**
-     * @param null|string $property
-     * @param null|mixed $value
      * @return IdentityInterface
      * @throws Exception
      * @throws InvalidConfigException

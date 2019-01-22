@@ -74,15 +74,7 @@ class User extends \yii\web\User
      */
     public function __get($name)
     {
-        return isset($name) ? parent::__get($name) : $this->_identity->$name;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function __isset($name): bool
-    {
-        return parent::__isset($name) || isset($this->_identity->$name);
+        return isset($this->$name) ? parent::__get($name) : $this->_identity->$name;
     }
 
     /**
@@ -102,17 +94,6 @@ class User extends \yii\web\User
         $identity = $this->_identity;
 
         return parent::hasProperty($name) || $identity->hasProperty($name);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function canGetProperty($name, $checkVars = true, $checkBehaviors = true): bool
-    {
-        /** @var ActiveRecord $identity */
-        $identity = $this->_identity;
-
-        return $this->hasProperty($name) ? parent::canGetProperty($name) : $identity->canGetProperty($name);
     }
 
     /**
