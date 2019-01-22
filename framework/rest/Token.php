@@ -21,6 +21,7 @@ use yii\helpers\{Json, StringHelper, Url};
  * @property-read int $created_at
  * @property-read int $expires_at
  *
+ * @property-read bool $isValid
  * @property-read ActiveUser $user
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
@@ -43,7 +44,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public static function findByUserId(int $userId): ?TokenInterface
     {
-        return ($token = static::findOne(['user_id' => $userId])) !== null && $token->isValid() ? $token : null;
+        return ($token = static::findOne(['user_id' => $userId])) !== null && $token->getIsValid() ? $token : null;
     }
 
     /**
@@ -69,7 +70,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public static function findByRefresh(string $refresh): ?TokenInterface
     {
-        return ($token = static::findOne(['refresh' => $refresh])) !== null && !$token->isValid() ? $token : null;
+        return ($token = static::findOne(['refresh' => $refresh])) !== null && !$token->getIsValid() ? $token : null;
     }
 
     /**
@@ -128,7 +129,7 @@ class Token extends ActiveRecord implements TokenInterface
             'access_token' => function() { return $this->__toString(); },
             'token_type' => function() { return 'bearer'; },
             'expires_in' => function() { return $this->expires_at - $this->created_at; },
-            'refresh_token'
+            'refresh_token' => 'refresh'
         ];
     }
 
@@ -143,7 +144,7 @@ class Token extends ActiveRecord implements TokenInterface
     /**
      * {@inheritdoc}
      */
-    public function isValid(): bool
+    public function getIsValid(): bool
     {
         return $this->expires_at === null || $this->expires_at > time();
     }

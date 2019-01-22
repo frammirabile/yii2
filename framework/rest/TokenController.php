@@ -6,7 +6,7 @@
 
 namespace yii\rest;
 
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidConfigException, InvalidValueException};
 use yii\db\ActiveRecordInterface;
 use yii\web\ServerErrorHttpException;
 
@@ -58,26 +58,28 @@ class TokenController extends ActiveController
      */
     public function actionCreate(): TokenInterface
     {
+        /** @var TokenInterface|ActiveRecordInterface $token */
         $token = \Yii::$app->user->getToken();
 
-        if ($token !== null & !$token->isValid())
-            try {
-                /** @var ActiveRecordInterface $token */
-                $token->delete();
+        if ($token !== null && $token->getIsValid() && \Yii::$app->getRequest()->getBodyParam('grant_type') == 'refresh_token')
+            throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be refreshed'));
+
+        try {
+            if ($token === null || !$token->getIsValid() && $token->delete()) {
                 $token = new \Yii::$app->user->tokenClass;
                 $token->save();
 
                 \Yii::$app->getResponse()->setStatusCode(201);
-            } catch (\Throwable $e) {
-                \Yii::error($e->getMessage(), __METHOD__);
-                throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be created'));
             }
-        elseif (\Yii::$app->getRequest()->getBodyParam('grant_type') == 'refresh_token')
-            throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be refreshed'));
 
-        \Yii::$app->getResponse()->getHeaders()
-            ->add('Cache-Control', 'no-store')
-            ->add('Pragma', 'no-cache');
+            if (!$token->getIsValid())
+                throw new InvalidValueException('Invalid token');
+        } catch (\Throwable $e) {
+            \Yii::error($e->getMessage(), __METHOD__);
+            throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be created'));
+        }
+
+        \Yii::$app->getResponse()->getHeaders()->add('Cache-Control', 'no-store')->add('Pragma', 'no-cache');
 
         return $token;
     }

@@ -57,5 +57,5 @@ interface TokenInterface
      *
      * @return bool whether the token is valid
      */
-    public function isValid(): bool;
+    public function getIsValid(): bool;
 }
