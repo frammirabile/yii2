@@ -39,6 +39,14 @@ interface TokenInterface
     public static function findByRefresh(string $token): ?self;
 
     /**
+     * Deletes a token by the given user id
+     *
+     * @param int $userId the user id to be looked for
+     * @return bool whether the token has been deleted
+     */
+    public static function deleteByUserId(int $userId): bool;
+
+    /**
      * Converts a token object into its string representation
      *
      * @return string the token string

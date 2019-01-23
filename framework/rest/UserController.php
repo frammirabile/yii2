@@ -30,9 +30,9 @@ class UserController extends ActiveController
     }
 
     /**
-     * @return IdentityInterface|null
+     * @return UserInterface|null
      */
-    public function actionViewMe(): ?IdentityInterface
+    public function actionViewMe(): ?UserInterface
     {
         return \Yii::$app->user->getIdentity();
     }

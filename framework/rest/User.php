@@ -98,10 +98,11 @@ class User extends \yii\web\User
 
     /**
      * {@inheritdoc}
+     * @return UserInterface|null
      */
-    public function getIdentity($autoRenew = false): ?IdentityInterface
+    public function getIdentity($autoRenew = false): ?UserInterface
     {
-        return $this->_identity;
+        return $this->_this;
     }
 
     /**

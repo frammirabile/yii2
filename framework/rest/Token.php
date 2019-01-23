@@ -30,6 +30,11 @@ use yii\helpers\{Json, StringHelper, Url};
 class Token extends ActiveRecord implements TokenInterface
 {
     /**
+     * @var string the user id attribute
+     */
+    protected static $userIdAttribute = 'user_id';
+
+    /**
      * {@inheritdoc}
      */
     protected $savingNotAllowed = false;
@@ -44,7 +49,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public static function findByUserId(int $userId): ?TokenInterface
     {
-        return ($token = static::findOne(['user_id' => $userId])) !== null && $token->getIsValid() ? $token : null;
+        return ($token = static::findOne([self::$userIdAttribute => $userId])) !== null && $token->getIsValid() ? $token : null;
     }
 
     /**
@@ -74,6 +79,15 @@ class Token extends ActiveRecord implements TokenInterface
     }
 
     /**
+     * @param int $userId
+     * @return bool
+     */
+    public static function deleteByUserId(int $userId): bool
+    {
+        return static::deleteAll([self::$userIdAttribute => $userId]) > 0;
+    }
+
+    /**
      * @return string
      * @throws \Exception
      */
@@ -90,7 +104,7 @@ class Token extends ActiveRecord implements TokenInterface
         return [
             [
                 'class' => BlameableBehavior::class,
-                'createdByAttribute' => 'user_id',
+                'createdByAttribute' => self::$userIdAttribute,
                 'updatedByAttribute' => false
             ],
             [
@@ -138,7 +152,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public function getUserId(): int
     {
-        return $this->user_id;
+        return $this->{self::$userIdAttribute};
     }
 
     /**
@@ -154,7 +168,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public function getUser(): ActiveQuery
     {
-        return $this->hasOne(ActiveUser::class, ['id' => 'user_id']);
+        return $this->hasOne(ActiveUser::class, ['id' => self::$userIdAttribute]);
     }
 
     /**
@@ -166,7 +180,7 @@ class Token extends ActiveRecord implements TokenInterface
         return [
             'jti' => StringHelper::binaryToUuid($this->id),
             'iss' => Url::domain(),
-            'sub' => $this->user_id,
+            'sub' => $this->getUserId(),
             'iat' => $this->created_at,
             'exp' => $this->expires_at
         ];

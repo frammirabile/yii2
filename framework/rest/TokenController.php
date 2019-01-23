@@ -64,11 +64,12 @@ class TokenController extends ActiveController
         if ($token !== null && $token->getIsValid() && \Yii::$app->getRequest()->getBodyParam('grant_type') == 'refresh_token')
             throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be refreshed'));
 
-        /** @var ActiveRecordInterface $tokenClass */
+        /** @var TokenInterface|ActiveRecordInterface $tokenClass */
         $tokenClass = \Yii::$app->user->tokenClass;
 
         try {
-            if ($token === null || !$token->getIsValid() && $tokenClass::deleteAll(['user_id' => \Yii::$app->user->getId()])) {
+            if (($token === null || !$token->getIsValid())) {
+                $tokenClass::deleteByUserId(\Yii::$app->user->getId());
                 $token = new \Yii::$app->user->tokenClass;
                 $token->save();
 
