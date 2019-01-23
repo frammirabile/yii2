@@ -6,7 +6,6 @@
 
 namespace yii\rest;
 
-use yii\base\{InvalidCallException, UnknownPropertyException};
 use yii\behaviors\AttributeTypecastBehavior;
 use yii\helpers\{Inflector, StringHelper};
 use yii\validators\Validator;
@@ -35,12 +34,17 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     protected $savingNotAllowed;
 
     /**
+     * @var string the active attribute suffix
+     */
+    protected $suffix = '_id';
+
+    /**
      * @var static[]
      */
     private $_related = [];
 
     /**
-     * @var array
+     * @var Dependency[]
      */
     private $_dependencies = [];
 
@@ -55,18 +59,11 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     }
 
     /**
-     * @param string $interface
-     * @return bool
-     */
-    public static function implement(string $interface): bool
-    {
-        return in_array($interface, class_implements(static::class));
-    }
-
-    /**
      * {@inheritdoc}
      *
      * @return void
+     *
+     * @tbd sistemare
      */
     public function init(): void
     {
@@ -80,6 +77,8 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
 
     /**
      * {@inheritdoc}
+     *
+     * @tbd sistemare
      */
     public function __get($name)
     {
@@ -95,6 +94,8 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      * {@inheritdoc}
      *
      * @return void
+     *
+     * @tbd sistemare
      */
     public function __set($name, $value): void
     {
@@ -122,6 +123,8 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      * {@inheritdoc}
      *
      * @return void
+     *
+     * @tbd sistemare
      */
     public function __unset($name): void
     {
@@ -140,6 +143,8 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
 
     /**
      * {@inheritdoc}
+     *
+     * @tbd sistemare
      */
     public function createValidators(): \ArrayObject
     {
@@ -162,7 +167,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
         $attributes = array_diff($activeAttributes, array_keys($this->attributes));
 
         foreach ($attributes as $key => $attribute)
-            if ($this->hasAttribute($attribute .= '_id'))
+            if ($this->hasAttribute($attribute .= $this->suffix))
                 $activeAttributes[$key] = $attribute;
 
         return $activeAttributes;
@@ -197,7 +202,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      *
      * @return void
      *
-     * @tbd utilizzare transazioni
+     * @tbd sistemare e utilizzare transazioni
      */
     public function afterSave($insert, $changedAttributes): void
     {
@@ -222,7 +227,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return ActiveDependency[]
+     * @return array
      */
     protected function dependencies(): array
     {
@@ -234,6 +239,8 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      *
      * @param string $name the name of the dependency
      * @return bool whether the active record has a dependency with the specified name
+     *
+     * @tbd sistemare
      */
     private function hasDependency(string $name): bool
     {

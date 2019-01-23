@@ -17,7 +17,7 @@ use yii\helpers\Inflector;
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  */
-class ActiveDependency extends Component
+class Dependency extends Component
 {
     /**
      * @var string
