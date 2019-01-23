@@ -43,6 +43,11 @@ use yii\helpers\{ArrayHelper, StringHelper, UnsetArrayValue};
 abstract class ActiveController extends Controller
 {
     /**
+     * @var string the model class name
+     */
+    public $modelClass;
+
+    /**
      * @var string the scenario used for creating a model
      */
     public $createScenario = ActiveRecord::SCENARIO_CREATE;
@@ -51,11 +56,6 @@ abstract class ActiveController extends Controller
      * @var string the scenario used for updating a model
      */
     public $updateScenario = ActiveRecord::SCENARIO_UPDATE;
-
-    /**
-     * @var string the model class name. This property must be set.
-     */
-    protected $modelClass;
 
     /**
      * {@inheritdoc}

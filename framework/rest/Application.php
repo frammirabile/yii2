@@ -11,6 +11,7 @@ use yii\helpers\{ArrayHelper, UnsetArrayValue};
 /**
  * Rest application
  *
+ * @property-read ActiveController $controller
  * @property-read Request $request
  * @property-read Response $response
  * @property-read User $user

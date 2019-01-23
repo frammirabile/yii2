@@ -6,16 +6,18 @@
 
 namespace yii\rest;
 
-use yii\base\{BaseObject, InvalidConfigException};
-use yii\db\ActiveRecordInterface;
+use yii\base\{Component, InvalidConfigException};
+use yii\helpers\Inflector;
 
 /**
  * Rest active dependency
  *
+ * @property-read bool $isCollection
+ *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
  */
-class ActiveDependency extends BaseObject
+class ActiveDependency extends Component
 {
     /**
      * @var string
@@ -38,20 +40,37 @@ class ActiveDependency extends BaseObject
     public $collection = false;
 
     /**
+     * @var string the foreign key suffix
+     */
+    public $suffix = '_id';
+
+    /**
      * @return void
      * @throws InvalidConfigException
      */
     public function init(): void
     {
-        if (!in_array(ActiveRecordInterface::class, class_implements($this->class)))
-            throw new InvalidConfigException(\Yii::t('yii', 'User class must implement UserInterface'));
+        if (!in_array(ActiveRecord::class, class_implements($this->class)))
+            throw new InvalidConfigException(\Yii::t('yii', 'Dependency class must implement ActiveRecord'));
 
-        if ($this->foreignKey === null)
-            $this->foreignKey = '';
+        if ($this->foreignKey === null) {
+            /** @var ActiveRecord $modelClass */
+            $modelClass = \Yii::$app->controller->modelClass;
+            $this->foreignKey = Inflector::underscore($modelClass::name($this->collection)).$this->suffix;
+        }
 
-        #tbd verifica esistenza chiave esterna
+        if ($this->name === null) {
+            /** @var ActiveRecord $class */
+            $class = $this->class;
+            $this->name = Inflector::variablize($class::name($this->collection));
+        }
+    }
 
-        if ($this->name === null)
-            $this->name = '';
+    /**
+     * @return bool
+     */
+    public function getIsCollection(): bool
+    {
+        return $this->collection;
     }
 }
