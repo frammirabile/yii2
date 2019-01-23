@@ -132,7 +132,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function fields(): array
     {
-        return [static::$idAttribute, static::$usernameAttribute];
+        return ['id' => static::$idAttribute, 'username' => static::$usernameAttribute, 'identity'];
     }
 
     /**
