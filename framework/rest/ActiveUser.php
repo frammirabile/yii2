@@ -86,8 +86,8 @@ class ActiveUser extends ActiveRecord implements UserInterface
     public function rules(): array
     {
         return [
-            [['username', 'password', 'identity_id'], 'required'],
-            [['username'], 'string'],
+            [[static::$usernameAttribute, 'password', 'identity_id'], 'required'],
+            [[static::$usernameAttribute], 'string'],
             ['password', 'string', 'when' => function() {
                 return $this->isAttributeChanged('password');
             }],
@@ -104,7 +104,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
     public function scenarios(): array
     {
         return [
-            self::SCENARIO_CREATE => ['username', 'password', 'identity_id'],
+            self::SCENARIO_CREATE => [static::$usernameAttribute, 'password', 'identity_id'],
             self::SCENARIO_UPDATE => ['password', 'active']
         ];
     }
@@ -129,7 +129,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function fields(): array
     {
-        return ['id', 'username'];
+        return [static::$idAttribute, static::$usernameAttribute];
     }
 
     /**
@@ -137,7 +137,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function getId(): int
     {
-        return $this->id;
+        return $this->{static::$idAttribute};
     }
 
     /**
@@ -145,7 +145,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function getUsername(): string
     {
-        return $this->hasAttribute('username') ? $this->username : $this->identity->getEmail();
+        return $this->hasAttribute(static::$usernameAttribute) ? $this->{static::$usernameAttribute} : $this->getIdentity()->getEmail();
     }
 
     /**

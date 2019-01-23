@@ -84,7 +84,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public static function deleteByUserId(int $userId): bool
     {
-        return static::deleteAll([self::$userIdAttribute => $userId]) > 0;
+        return static::deleteAll([static::$userIdAttribute => $userId]) > 0;
     }
 
     /**
@@ -104,7 +104,7 @@ class Token extends ActiveRecord implements TokenInterface
         return [
             [
                 'class' => BlameableBehavior::class,
-                'createdByAttribute' => self::$userIdAttribute,
+                'createdByAttribute' => static::$userIdAttribute,
                 'updatedByAttribute' => false
             ],
             [
@@ -152,7 +152,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public function getUserId(): int
     {
-        return $this->{self::$userIdAttribute};
+        return $this->{static::$userIdAttribute};
     }
 
     /**
@@ -168,7 +168,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public function getUser(): ActiveQuery
     {
-        return $this->hasOne(ActiveUser::class, ['id' => self::$userIdAttribute]);
+        return $this->hasOne(ActiveUser::class, ['id' => static::$userIdAttribute]);
     }
 
     /**

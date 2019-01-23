@@ -64,7 +64,7 @@ class TokenController extends ActiveController
         if ($token !== null && $token->getIsValid() && \Yii::$app->getRequest()->getBodyParam('grant_type') == 'refresh_token')
             throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be refreshed'));
 
-        /** @var TokenInterface|ActiveRecordInterface $tokenClass */
+        /** @var TokenInterface $tokenClass */
         $tokenClass = \Yii::$app->user->tokenClass;
 
         try {
@@ -77,7 +77,7 @@ class TokenController extends ActiveController
             }
 
             if (!$token->getIsValid())
-                throw new InvalidValueException('Invalid token');
+                throw new InvalidValueException;
         } catch (\Throwable $e) {
             \Yii::error($e->getMessage(), __METHOD__);
             throw new ServerErrorHttpException(\Yii::t('yii', 'Token cannot be created'));
