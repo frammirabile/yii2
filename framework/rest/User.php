@@ -14,7 +14,6 @@ use yii\helpers\StringHelper;
  *
  * @property-read int $id
  * @property-read string $username
- * @property-read int $identity_id
  * @property-read IdentityInterface|null $identity
  * @property-read TokenInterface|null $token
  *
@@ -82,7 +81,7 @@ class User extends \yii\web\User
      */
     public function __toString(): string
     {
-        return StringHelper::basename($this->identityClass).' '.$this->getIdentityId();
+        return StringHelper::basename($this->identityClass).' '.$this->getId();
     }
 
     /**
@@ -103,17 +102,6 @@ class User extends \yii\web\User
     public function getIdentity($autoRenew = false): ?UserInterface
     {
         return $this->_this;
-    }
-
-    /**
-     * @param IdentityInterface $identity
-     */
-    public function setIdentity($identity): void
-    {
-        if (!($identity instanceof IdentityInterface))
-            throw new InvalidValueException('The identity object must implement IdentityInterface');
-
-        $this->_identity = $identity;
     }
 
     /**
@@ -194,23 +182,13 @@ class User extends \yii\web\User
     }
 
     /**
-     * Returns the identity id
-     *
-     * @return int the identity id
-     */
-    public function getIdentityId(): int
-    {
-        return $this->_identity->getId() ?? null;
-    }
-
-    /**
      * @param IdentityInterface $identity
      * @return bool
      */
     private function _login(IdentityInterface $identity): bool
     {
         if ($this->beforeLogin($identity, false, 0)) {
-            $this->setIdentity($identity);
+            $this->_identity = $identity;
             \Yii::info($this->__toString().' logged in from '.\Yii::$app->request->getUserIP(), __METHOD__);
             $this->afterLogin($identity, false, 0);
         }

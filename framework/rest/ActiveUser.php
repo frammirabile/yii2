@@ -21,7 +21,7 @@ use yii\behaviors\TimestampBehavior;
  * @property-read int $created_at
  * @property-read int $updated_at
  *
- * @property-read IdentityInterface $identity
+ * @property IdentityInterface $identity
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
@@ -37,6 +37,11 @@ class ActiveUser extends ActiveRecord implements UserInterface
      * @var string the username attribute
      */
     protected static $usernameAttribute = 'username';
+
+    /**
+     * @var IdentityInterface
+     */
+    private $_identity;
 
     /**
      * {@inheritdoc}
@@ -81,20 +86,18 @@ class ActiveUser extends ActiveRecord implements UserInterface
     /**
      * {@inheritdoc}
      *
-     * @tbd ottimizzare regole username e password
+     * @tbd ottimizzare regole username, password e identity
      */
     public function rules(): array
     {
         return [
-            [[static::$usernameAttribute, 'password', 'identity_id'], 'required'],
+            [[static::$usernameAttribute, 'password', 'identity'], 'required'],
             [[static::$usernameAttribute], 'string'],
             ['password', 'string', 'when' => function() {
                 return $this->isAttributeChanged('password');
             }],
-            ['identity_id', 'integer'],
             ['active', 'default', 'value' => false],
-            ['active', 'boolean'],
-            ['identity_id', 'unique']
+            ['active', 'boolean']
         ];
     }
 
@@ -104,7 +107,7 @@ class ActiveUser extends ActiveRecord implements UserInterface
     public function scenarios(): array
     {
         return [
-            self::SCENARIO_CREATE => [static::$usernameAttribute, 'password', 'identity_id'],
+            self::SCENARIO_CREATE => [static::$usernameAttribute, 'password'],
             self::SCENARIO_UPDATE => ['password', 'active']
         ];
     }
@@ -183,11 +186,19 @@ class ActiveUser extends ActiveRecord implements UserInterface
     }
 
     /**
-     * @return bool
+     * {@inheritdoc}
      */
     public function getIsActive(): bool
     {
         return $this->active;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setIsActive(bool $active): void
+    {
+        $this->active = $active;
     }
 
     /**
@@ -202,6 +213,14 @@ class ActiveUser extends ActiveRecord implements UserInterface
         $identityClass = \Yii::$app->user->identityClass;
 
         return $identityClass::findById($this->identity_id);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setIdentity(IdentityInterface $identity): void
+    {
+        $this->_identity = $identity;
     }
 
     /**

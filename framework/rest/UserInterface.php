@@ -6,8 +6,6 @@
 
 namespace yii\rest;
 
-use yii\db\ActiveQuery;
-
 /**
  * Rest user interface
  *
@@ -61,10 +59,18 @@ interface UserInterface
     public function getUsername(): string;
 
     /**
-     * Returns whether the user password is valid
+     * Sets the password
      *
-     * @param string $password the user password
-     * @return bool whether the user password is valid
+     * @param string $password the password
+     * @return void
+     */
+    public function setPassword(string $password): void;
+
+    /**
+     * Returns whether the password is valid
+     *
+     * @param string $password the password
+     * @return bool whether the password is valid
      */
     public function validatePassword(string $password): bool;
 
@@ -84,11 +90,33 @@ interface UserInterface
     public function validatePasswordResetCode(string $passwordResetCode): bool;
 
     /**
+     * Returns whether the user is active
+     *
+     * @return bool whether the user is active
+     */
+    public function getIsActive(): bool;
+
+    /**
+     * Sets whether the user is active
+     *
+     * @param bool $active
+     * @return void
+     */
+    public function setIsActive(bool $active): void;
+
+    /**
      * Returns the identity
      *
      * @return IdentityInterface|null the identity
      */
     public function getIdentity(): ?IdentityInterface;
+
+    /**
+     * Sets the identity
+     *
+     * @param IdentityInterface $identity the identity
+     */
+    public function setIdentity(IdentityInterface $identity): void;
 
     /**
      * Returns the token
