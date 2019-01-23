@@ -34,7 +34,10 @@ class Request extends \yii\web\Request
     /**
      * {@inheritdoc}
      */
-    public $parsers = ['*/*' => 'yii\web\JsonParser'];
+    public $parsers = [
+        'application/json' => 'yii\web\JsonParser',
+        '*/*' => 'yii\web\JsonParser'
+    ];
 
     /**
      * @var Client
