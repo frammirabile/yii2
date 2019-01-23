@@ -222,7 +222,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return array
+     * @return ActiveDependency[]
      */
     protected function dependencies(): array
     {
