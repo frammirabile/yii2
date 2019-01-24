@@ -59,11 +59,12 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     }
 
     /**
+     * @param bool $pluralize
      * @return string
      */
-    public static function property(): string
+    public static function property(bool $pluralize = false): string
     {
-        return Inflector::variablize(static::name());
+        return Inflector::variablize(static::name($pluralize));
     }
 
     /**
@@ -78,57 +79,49 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      * {@inheritdoc}
      *
      * @return void
-     *
-     * @tbd sistemare
      */
     public function init(): void
     {
-        foreach ($this->dependencies() as $key => $value)
-            $this->_dependencies[Inflector::variablize(StringHelper::basename(is_string($key) ? $key : $value))] = [
-                is_string($key) ? $key : $value, static::foreignKey(), $value === true
-            ];
+        foreach ($this->dependencies() as $name => $config)
+            $this->_dependencies[$name] = new Dependency(is_array($config) ? $config : ['class' => $config]);
 
         parent::init();
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @tbd sistemare
      */
     public function __get($name)
     {
         if (!$this->hasDependency($name))
             return parent::__get($name);
 
-        list($class, $primaryKey, $multiple) = $this->_dependencies[$name];
+        $dependency = $this->_dependencies[$name];
 
-        return $this->_related[$name] ?? ($this->isNewRecord ? null : ($this->_related[$name] = ($this->{'has'.($multiple ? 'Many' : 'One')}($class, [$primaryKey => 'id']))->{$multiple ? 'all' : 'one'}()));
+        return $this->_related[$name] ?? ($this->isNewRecord ? null : ($this->_related[$name] = ($this->{'has'.($dependency->isCollection ? 'Many' : 'One')}($dependency->class, [$dependency->foreignKey => 'id']))->{$dependency->isCollection ? 'all' : 'one'}()));
     }
 
     /**
      * {@inheritdoc}
      *
      * @return void
-     *
-     * @tbd sistemare
      */
     public function __set($name, $value): void
     {
         if (!$this->hasDependency($name))
             parent::__set($name, $value);
         else {
-            list($class, , $multiple) = $this->_dependencies[$name];
+            $dependency = $this->_dependencies[$name];
 
-            if ($value instanceof $class || $value === null)
+            if ($value instanceof $dependency->class || $value === null)
                 $this->_related[$name] = $value;
-            elseif ($multiple)
-                $this->_related[$name] = array_map(function($data) use($class) {
-                    return new $class(['scenario' => self::SCENARIO_CREATE, 'attributes' => $data]);
+            elseif ($dependency->isCollection)
+                $this->_related[$name] = array_map(function($data) use($dependency) {
+                    return new $dependency->class(['scenario' => static::SCENARIO_CREATE, 'attributes' => $data]);
                 }, $value);
             else {
                 if (!isset($this->_related[$name]))
-                    $this->_related[$name] = $this->isNewRecord ? new $class(['scenario' => self::SCENARIO_CREATE]) : $this->$name;
+                    $this->_related[$name] = $this->isNewRecord ? new $dependency->class(['scenario' => static::SCENARIO_CREATE]) : $this->$name;
 
                 $this->_related[$name]->load($value, '');
             }
@@ -139,8 +132,6 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      * {@inheritdoc}
      *
      * @return void
-     *
-     * @tbd sistemare
      */
     public function __unset($name): void
     {
@@ -202,7 +193,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      */
     public function transactions(): array
     {
-        return [self::SCENARIO_CREATE => self::OP_INSERT];
+        return [static::SCENARIO_CREATE => self::OP_INSERT];
     }
 
     /**
@@ -225,17 +216,19 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
         parent::afterSave($insert, $changedAttributes);
 
         foreach ($this->_related as $name => $dependencies) {
+            $dependency = $this->_dependencies[$name];
+
             /** @var static $class */
-            list($class, $primaryKey) = $this->_dependencies[$name];
+            $class = $dependency->class;
 
             if ($dependencies === null)
-                $class::deleteAll(array_combine((array) $primaryKey, $this->primaryKey));
+                $class::deleteAll([$dependency->foreignKey => $this->primaryKey]);
             else {
                 if (!is_array($dependencies))
                     $dependencies = [$dependencies];
 
                 foreach ($dependencies as $dependency) {
-                    $dependency->setAttribute($primaryKey, $this->primaryKey[0]);
+                    $dependency->setAttribute($dependency->foreignKey, $this->primaryKey);
                     $dependency->save();
                 }
             }
@@ -255,8 +248,6 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      *
      * @param string $name the name of the dependency
      * @return bool whether the active record has a dependency with the specified name
-     *
-     * @tbd sistemare
      */
     private function hasDependency(string $name): bool
     {

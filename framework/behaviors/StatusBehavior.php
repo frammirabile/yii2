@@ -23,6 +23,11 @@ use yii\helpers\Inflector;
 class StatusBehavior extends Behavior
 {
     /**
+     * @var string
+     */
+    public $attribute = 'status';
+
+    /**
      * @var int
      */
     public $default = 1;
@@ -52,8 +57,8 @@ class StatusBehavior extends Behavior
      */
     public function beforeValidate(): void
     {
-        if ($this->owner->isAttributeActive('status') && !$this->hasStatus($this->getStatus()))
-            $this->owner->addError('status', 'Invalid status');
+        if ($this->owner->isAttributeActive($this->attribute) && !$this->hasStatus($this->getStatus()))
+            $this->owner->addError($this->attribute, 'Invalid status');
     }
 
     /**
@@ -62,8 +67,8 @@ class StatusBehavior extends Behavior
      */
     public function afterValidate(): void
     {
-        if ($this->owner->isAttributeActive('status') && is_string($attribute = $this->owner->getAttribute('status')))
-            $this->owner->setAttribute('status', $this->getStatus($attribute));
+        if ($this->owner->isAttributeActive($this->attribute) && is_string($attribute = $this->owner->getAttribute('status')))
+            $this->owner->setAttribute($this->attribute, $this->getStatus($attribute));
     }
 
     /**
@@ -85,7 +90,7 @@ class StatusBehavior extends Behavior
      */
     public function beforeInsert(): void
     {
-        $this->owner->setAttribute('status', $this->default);
+        $this->owner->setAttribute($this->attribute, $this->default);
     }
 
     /**
@@ -104,11 +109,11 @@ class StatusBehavior extends Behavior
     public function getStatus(?string $text = null)
     {
         if ($text === null) {
-            if (!$this->owner->hasProperty('status'))
+            if (!$this->owner->hasProperty($this->attribute))
                 throw new InvalidConfigException(\Yii::t('api', 'Current status must be set'));
 
             /** @noinspection PhpUndefinedFieldInspection */
-            return $this->owner->status;
+            return $this->owner->getAttribute($this->attribute);
         }
 
         return array_search($text, $this->_status);
