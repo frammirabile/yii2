@@ -237,9 +237,9 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
                 if (!is_array($dependencies))
                     $dependencies = [$dependencies];
 
-                foreach ($dependencies as $dependency) {
-                    $dependency->setAttribute($dependency->foreignKey, $this->primaryKey);
-                    $dependency->save();
+                foreach ($dependencies as $model) {
+                    $model->setAttribute($dependency->foreignKey, $this->primaryKey);
+                    $model->save();
                 }
             }
         }
