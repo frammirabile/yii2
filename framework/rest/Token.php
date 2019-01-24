@@ -124,7 +124,7 @@ class Token extends ActiveRecord implements TokenInterface
      */
     public function beforeSave($insert): bool
     {
-        if (!parent::beforeSave($insert))
+        if (!parent::beforeSave($insert) || !$insert)
             return false;
 
         $this->id = str_pad(mb_convert_encoding(StringHelper::uuid2Binary(Uuid::uuid4()->toString()), 'UTF-8'), 16);
