@@ -7,7 +7,7 @@
 namespace yii\rest;
 
 use yii\behaviors\AttributeTypecastBehavior;
-use yii\helpers\{Inflector, StringHelper};
+use yii\helpers\{ArrayHelper, Inflector, StringHelper};
 use yii\validators\Validator;
 
 /**
@@ -146,6 +146,16 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     public function behaviors(): array
     {
         return [AttributeTypecastBehavior::class];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function scenarios(): array
+    {
+        return $this->savingNotAllowed !== false
+            ? parent::scenarios()
+            : ArrayHelper::replaceKeys(parent::scenarios(), ['/'.self::SCENARIO_DEFAULT.'/' => static::SCENARIO_CREATE]);
     }
 
     /**

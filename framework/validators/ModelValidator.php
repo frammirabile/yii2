@@ -18,13 +18,20 @@ use yii\helpers\{Inflector, StringHelper};
 class ModelValidator extends Validator
 {
     /**
-     * Validates a model
+     * Validates one or more models
      *
      * @param Model $value
      * @return array|null
      */
     protected function validateValue($value): ?array
     {
-        return $value instanceof Model && $value->validate() ? null : ['Invalid {model}', ['model' => Inflector::variablize(StringHelper::basename(get_class($value)))]];
+        if (!is_array($value))
+            $value = [$value];
+
+        foreach ($value as $model)
+            if (!($model instanceof Model) || !$model->validate())
+                return [current($model->firstErrors) ?? 'Invalid model', []];
+
+        return null;
     }
 }
