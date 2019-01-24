@@ -29,14 +29,14 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     const SCENARIO_UPDATE = 'update';
 
     /**
+     * @var string the foreign key suffix
+     */
+    protected static $suffix = '_id';
+
+    /**
      * @var bool|null
      */
     protected $savingNotAllowed;
-
-    /**
-     * @var string the active attribute suffix
-     */
-    protected $suffix = '_id';
 
     /**
      * @var static[]
@@ -59,6 +59,22 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     }
 
     /**
+     * @return string
+     */
+    public static function property(): string
+    {
+        return Inflector::variablize(static::name());
+    }
+
+    /**
+     * @return string
+     */
+    public static function foreignKey(): string
+    {
+        return Inflector::underscore(static::name()).static::$suffix;
+    }
+
+    /**
      * {@inheritdoc}
      *
      * @return void
@@ -69,7 +85,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     {
         foreach ($this->dependencies() as $key => $value)
             $this->_dependencies[Inflector::variablize(StringHelper::basename(is_string($key) ? $key : $value))] = [
-                is_string($key) ? $key : $value, Inflector::underscore(self::name()).'_id', $value === true
+                is_string($key) ? $key : $value, static::foreignKey(), $value === true
             ];
 
         parent::init();
@@ -167,7 +183,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
         $attributes = array_diff($activeAttributes, array_keys($this->attributes));
 
         foreach ($attributes as $key => $attribute)
-            if ($this->hasAttribute($attribute .= $this->suffix))
+            if ($this->hasAttribute($attribute .= static::$suffix))
                 $activeAttributes[$key] = $attribute;
 
         return $activeAttributes;

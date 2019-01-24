@@ -40,11 +40,6 @@ class Dependency extends Component
     public $collection = false;
 
     /**
-     * @var string the foreign key suffix
-     */
-    public $suffix = '_id';
-
-    /**
      * @return void
      * @throws InvalidConfigException
      */
@@ -56,7 +51,7 @@ class Dependency extends Component
         if ($this->foreignKey === null) {
             /** @var ActiveRecord $modelClass */
             $modelClass = \Yii::$app->controller->modelClass;
-            $this->foreignKey = Inflector::underscore($modelClass::name($this->collection)).$this->suffix;
+            $this->foreignKey = Inflector::underscore($modelClass::name($this->collection)).$modelClass::foreignKey();
         }
 
         if ($this->name === null) {

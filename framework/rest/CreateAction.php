@@ -53,6 +53,12 @@ class CreateAction extends Action
         if ($this->checkAccess)
             call_user_func($this->checkAccess, $this->id);
 
+        if ($this->primaryModel !== null) {
+            /** @var ActiveRecord $primaryModelClass */
+            $primaryModelClass = get_class($this->primaryModel);
+            $this->data = [$primaryModelClass::property() => $this->primaryModel->getPrimaryKey()] + \Yii::$app->getRequest()->getBodyParams();
+        }
+
         /** @var $model ActiveRecord */
         $model = new $this->modelClass(['scenario' => $this->scenario]);
         $model->load($this->data ?: \Yii::$app->getRequest()->getBodyParams(), '');
