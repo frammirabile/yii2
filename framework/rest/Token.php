@@ -35,11 +35,6 @@ class Token extends ActiveRecord implements TokenInterface
     protected static $userIdAttribute = 'user_id';
 
     /**
-     * {@inheritdoc}
-     */
-    protected $savingNotAllowed = false;
-
-    /**
      * @var int|string
      */
     protected $expiration;
