@@ -111,7 +111,11 @@ class IndexAction extends Action
 
                     foreach ($filters as $attribute => $validators)
                         foreach ((array) $validators as $validator)
-                            if (is_string($validator))
+                            if ($validator == 'boolean')
+                                $searchModel->addRule($attribute, 'filter', ['filter' => function($value) {
+                                    return strlen($value) == 0 || filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                                }]);
+                            elseif (is_string($validator))
                                 $searchModel->addRule($attribute, $validator);
                             elseif (is_array($validator))
                                 $searchModel->addRule($attribute, reset($validator), array_slice($validator, 1));
