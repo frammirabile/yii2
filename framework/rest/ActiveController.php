@@ -7,8 +7,6 @@
 
 namespace yii\rest;
 
-use yii\base\DynamicModel;
-use yii\data\ActiveDataFilter;
 use yii\filters\auth\HttpBearerAuth;
 use yii\filters\Cors;
 use yii\helpers\{ArrayHelper, StringHelper, UnsetArrayValue};
@@ -97,7 +95,7 @@ abstract class ActiveController extends Controller
      */
     public function actions(): array
     {
-        $actions = [
+        return [
             'create' => [
                 'class' => CreateAction::class,
                 'modelClass' => $this->modelClass,
@@ -127,41 +125,6 @@ abstract class ActiveController extends Controller
             ],
             'options' => OptionsAction::class
         ];
-
-        if (in_array(Filterable::class, class_implements($this->modelClass)))
-            ArrayHelper::setValue($actions, 'index.dataFilter', [
-                'class' => ActiveDataFilter::class,
-                'searchModel' => function() {
-                    /** @var Filterable $modelClass */
-                    $modelClass = $this->modelClass;
-                    $searchModel = new DynamicModel(array_keys($modelClass::filters()));
-
-                    foreach ($modelClass::filters() as $attribute => $validators)
-                        foreach ((array) $validators as $validator)
-                            if (is_string($validator))
-                                $searchModel->addRule($attribute, $validator);
-                            elseif (is_array($validator))
-                                $searchModel->addRule($attribute, reset($validator), array_slice($validator, 1));
-
-                    return $searchModel;
-                }/*, tbd rimuovere
-                'filterMap' => function() {
-                    *//** @var Filterable $modelClass *//*
-                    $modelClass = $this->modelClass;
-                    $filterMap = [];
-
-                    foreach ($modelClass::filters() as $attribute => $validators)
-                        foreach ((array) $validators as $validator)
-                            if ($validator instanceof \Closure) {
-                                $filterMap[$attribute] = $validator;
-                                continue 2;
-                            }
-
-                    return $filterMap;
-                }*/
-            ]);
-
-        return $actions;
     }
 
     /**

@@ -7,9 +7,10 @@
 
 namespace yii\rest;
 
-use yii\base\InvalidConfigException;
-use yii\data\{ActiveDataProvider, DataFilter, Pagination, Sort};
+use yii\base\{DynamicModel, InvalidConfigException};
+use yii\data\{ActiveDataFilter, ActiveDataProvider, DataFilter, Pagination, Sort};
 use yii\db\ActiveQuery;
+use yii\helpers\ArrayHelper;
 
 /**
  * IndexAction implements the API endpoint for listing multiple models.
@@ -74,6 +75,11 @@ class IndexAction extends Action
     public $dataFilter;
 
     /**
+     * @var bool whether to underscore filters
+     */
+    public $underscoreFilters = true;
+
+    /**
      * @var ActiveQuery the query to return the collection of the models
      */
     public $query;
@@ -87,6 +93,37 @@ class IndexAction extends Action
      * @var Sort|bool the sorting object
      */
     public $sort;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function init(): void
+    {
+        parent::init();
+
+        if (in_array(Filterable::class, class_implements($this->modelClass))) {
+            /** @var Filterable $modelClass */
+            $modelClass = $this->modelClass;
+            $filters = $modelClass::filters();
+
+            $this->dataFilter = [
+                'class' => ActiveDataFilter::class,
+                'searchModel' => function() use($filters) {
+                    $searchModel = new DynamicModel(array_keys($filters));
+
+                    foreach ($filters as $attribute => $validators)
+                        foreach ((array) $validators as $validator)
+                            if (is_string($validator))
+                                $searchModel->addRule($attribute, $validator);
+                            elseif (is_array($validator))
+                                $searchModel->addRule($attribute, reset($validator), array_slice($validator, 1));
+
+                    return $searchModel;
+                },
+                'attributeMap' => $this->underscoreFilters ? array_combine($filters = array_keys($filters), ArrayHelper::underscoreValues($filters)) : []
+            ];
+        }
+    }
 
     /**
      * @return ActiveDataProvider|DataFilter
