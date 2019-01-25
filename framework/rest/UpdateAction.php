@@ -18,10 +18,8 @@ use yii\web\{NotFoundHttpException, ServerErrorHttpException};
  * For more details and usage information on UpdateAction, see the [guide article on rest controllers](guide:rest-controllers).
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
- * @since 1.0
+ * @since 2.0
  */
 class UpdateAction extends Action
 {

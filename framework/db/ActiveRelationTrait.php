@@ -15,6 +15,7 @@ use yii\helpers\ArrayHelper;
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @author Carsten Brandt <mail@cebe.cc>
+ * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 2.0
  *
  * @method ActiveRecordInterface one()
@@ -526,7 +527,7 @@ trait ActiveRelationTrait
             if (count($attributes[$key]) === 1) {
                 $attribute = reset($link);
 
-                foreach ($models as $model) {
+                foreach ($models as $model)
                     if (($value = $model[$attribute]) !== null) {
                         if (is_array($value))
                             $values[$key] = array_merge($values[$key], $value);
@@ -535,12 +536,11 @@ trait ActiveRelationTrait
                         else
                             $values[$key][] = $value;
                     }
-                }
 
                 if (empty($values[$key]))
                     $this->emulateExecution();
             } else {
-                $prefixedLink = array_combine($attributes, $link);
+                $prefixedLink = array_combine($attributes[$key], $link);
 
                 foreach ($models as $model) {
                     $v = [];
@@ -559,11 +559,11 @@ trait ActiveRelationTrait
         if ($isOr)
             $this->andWhere([
                 'or',
-                ['in', $attributes[0], array_unique($values[0], SORT_REGULAR)],
-                ['in', $attributes[1], array_unique($values[1], SORT_REGULAR)]
+                ['in', reset($attributes), array_unique(reset($values), SORT_REGULAR)],
+                ['in', next($attributes), array_unique(next($values), SORT_REGULAR)]
             ]);
         else
-            $this->andWhere(['in', $attributes[0], array_unique($values[0], SORT_REGULAR)]);
+            $this->andWhere(['in', current($attributes), array_unique(current($values), SORT_REGULAR)]);
     }
 
     /**

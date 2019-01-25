@@ -55,10 +55,8 @@ use yii\web\{CompositeUrlRule, Request, UrlManager, UrlRule as WebUrlRule, UrlRu
  * For more details and usage information on UrlRule, see the [guide article on rest routing](guide:rest-routing).
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
- * @since 1.0
+ * @since 2.0
  */
 class UrlRule extends CompositeUrlRule
 {

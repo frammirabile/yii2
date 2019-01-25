@@ -23,10 +23,8 @@ use yii\web\{Link, Request, Response};
  * implementing [[DataProviderInterface]]. You may override [[serialize()]] to handle more types.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
- * @since 1.0
+ * @since 2.0
  */
 class Serializer extends Component
 {
