@@ -175,7 +175,7 @@ class Serializer extends Component
             $collection = true;
         }
 
-        if (ArrayHelper::isAssociative($data[0])) {
+        if (ArrayHelper::isAssociative(reset($data))) {
             if (!empty($this->keysReplacements))
                 foreach ($data as &$model)
                     $model = ArrayHelper::replaceKeys($model, $this->keysReplacements);

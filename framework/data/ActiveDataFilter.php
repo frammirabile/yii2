@@ -63,12 +63,13 @@ class ActiveDataFilter extends DataFilter
      * ```
      */
     public $queryOperatorMap = [];
+
     /**
      * @var \Closure[]
      *
-     * @tbd
+     * @tbd rimuovere
      */
-    private $_filterMap = [];
+    #private $_filterMap = [];
 
 
     /**
@@ -129,23 +130,25 @@ class ActiveDataFilter extends DataFilter
     /**
      * @param \Closure $filterMap
      *
-     * @tbd
+     * @tbd rimuovere
      */
+    /*
     public function setFilterMap(\Closure $filterMap): void
     {
         $this->_filterMap = call_user_func($filterMap);
-    }
+    }*/
 
     /**
      * @param array $condition
      * @return void
      *
-     * @tbd
+     * @tbd rimuovere
      */
+    /*
     private function setCondition(array &$condition): void
     {
         $condition = call_user_func($this->_filterMap[key($condition)], current($condition));
-    }
+    }*/
 
     /**
      * Builds conjunction condition, which consists of multiple independent ones.

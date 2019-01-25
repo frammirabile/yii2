@@ -7,6 +7,8 @@
 
 namespace yii\rest;
 
+use yii\base\DynamicModel;
+use yii\data\ActiveDataFilter;
 use yii\filters\auth\HttpBearerAuth;
 use yii\filters\Cors;
 use yii\helpers\{ArrayHelper, StringHelper, UnsetArrayValue};
@@ -95,7 +97,7 @@ abstract class ActiveController extends Controller
      */
     public function actions(): array
     {
-        return [
+        $actions = [
             'create' => [
                 'class' => CreateAction::class,
                 'modelClass' => $this->modelClass,
@@ -126,12 +128,11 @@ abstract class ActiveController extends Controller
             'options' => OptionsAction::class
         ];
 
-        /* tbd sistemare
         if (in_array(Filterable::class, class_implements($this->modelClass)))
             ArrayHelper::setValue($actions, 'index.dataFilter', [
                 'class' => ActiveDataFilter::class,
                 'searchModel' => function() {
-                    *//** @var Filterable $modelClass *//*
+                    /** @var Filterable $modelClass */
                     $modelClass = $this->modelClass;
                     $searchModel = new DynamicModel(array_keys($modelClass::filters()));
 
@@ -140,10 +141,10 @@ abstract class ActiveController extends Controller
                             if (is_string($validator))
                                 $searchModel->addRule($attribute, $validator);
                             elseif (is_array($validator))
-                                $searchModel->addRule($attribute, $validator[0], array_slice($validator, 1));
+                                $searchModel->addRule($attribute, reset($validator), array_slice($validator, 1));
 
                     return $searchModel;
-                },
+                }/*, tbd rimuovere
                 'filterMap' => function() {
                     *//** @var Filterable $modelClass *//*
                     $modelClass = $this->modelClass;
@@ -157,9 +158,10 @@ abstract class ActiveController extends Controller
                             }
 
                     return $filterMap;
-                }
+                }*/
             ]);
-        */
+
+        return $actions;
     }
 
     /**

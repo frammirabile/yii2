@@ -196,10 +196,9 @@ class ActiveQuery extends Query implements ActiveQueryInterface
             $this->where = $where;
         }
 
-        if (!empty($this->on))
-            $this->on[0] == 'or'
-                ? $query->orWhere($this->on[1])
-                : $query->andWhere($this->on);
+        if (!empty($this->on)) {
+            $query->andWhere($this->on);
+        }
 
         return $query;
     }
@@ -739,9 +738,7 @@ class ActiveQuery extends Query implements ActiveQueryInterface
      */
     public function orOnCondition($condition, $params = [])
     {
-        if ($this->link !== null) {
-            $this->on = ['or', $condition];
-        } elseif ($this->on === null) {
+        if ($this->on === null) {
             $this->on = $condition;
         } else {
             $this->on = ['or', $this->on, $condition];

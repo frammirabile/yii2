@@ -89,10 +89,10 @@ class IndexAction extends Action
     public $sort;
 
     /**
-     * @return ActiveDataProvider
+     * @return ActiveDataProvider|DataFilter
      * @throws InvalidConfigException
      */
-    public function run(): ActiveDataProvider
+    public function run(): object
     {
         if ($this->checkAccess)
             call_user_func($this->checkAccess, $this->id);
