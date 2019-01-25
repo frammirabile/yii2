@@ -7,8 +7,8 @@
 
 namespace yii\db;
 
-use yii\base\InvalidArgumentException;
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidArgumentException, InvalidConfigException};
+use yii\helpers\ArrayHelper;
 
 /**
  * ActiveRelationTrait implements the common methods and properties for active record relational queries.
@@ -513,45 +513,57 @@ trait ActiveRelationTrait
      */
     private function filterByModels($models)
     {
-        $attributes = array_keys($this->link);
+        if (!($isOr = !ArrayHelper::isAssociative($links = $this->link)))
+            $links = [$links];
 
-        $attributes = $this->prefixKeyColumns($attributes);
-
+        $attributes = [];
         $values = [];
-        if (count($attributes) === 1) {
-            // single key
-            $attribute = reset($this->link);
-            foreach ($models as $model) {
-                if (($value = $model[$attribute]) !== null) {
-                    if (is_array($value)) {
-                        $values = array_merge($values, $value);
-                    } elseif ($value instanceof ArrayExpression && $value->getDimension() === 1) {
-                        $values = array_merge($values, $value->getValue());
-                    } else {
-                        $values[] = $value;
+
+        foreach ($links as $key => $link) {
+            $attributes[$key] = $this->prefixKeyColumns(array_keys($link));
+            $values[$key] = [];
+
+            if (count($attributes[$key]) === 1) {
+                $attribute = reset($link);
+
+                foreach ($models as $model) {
+                    if (($value = $model[$attribute]) !== null) {
+                        if (is_array($value))
+                            $values[$key] = array_merge($values[$key], $value);
+                        elseif ($value instanceof ArrayExpression && $value->getDimension() === 1)
+                            $values[$key] = array_merge($values[$key], $value->getValue());
+                        else
+                            $values[$key][] = $value;
                     }
                 }
-            }
-            if (empty($values)) {
-                $this->emulateExecution();
-            }
-        } else {
-            // composite keys
 
-            // ensure keys of $this->link are prefixed the same way as $attributes
-            $prefixedLink = array_combine($attributes, $this->link);
-            foreach ($models as $model) {
-                $v = [];
-                foreach ($prefixedLink as $attribute => $link) {
-                    $v[$attribute] = $model[$link];
-                }
-                $values[] = $v;
-                if (empty($v)) {
+                if (empty($values[$key]))
                     $this->emulateExecution();
+            } else {
+                $prefixedLink = array_combine($attributes, $link);
+
+                foreach ($models as $model) {
+                    $v = [];
+
+                    foreach ($prefixedLink as $attribute => $link)
+                        $v[$attribute] = $model[$link];
+
+                    $values[$key][] = $v;
+
+                    if (empty($v))
+                        $this->emulateExecution();
                 }
             }
         }
-        $this->andWhere(['in', $attributes, array_unique($values, SORT_REGULAR)]);
+
+        if ($isOr)
+            $this->andWhere([
+                'or',
+                ['in', $attributes[0], array_unique($values[0], SORT_REGULAR)],
+                ['in', $attributes[1], array_unique($values[1], SORT_REGULAR)]
+            ]);
+        else
+            $this->andWhere(['in', $attributes[0], array_unique($values[0], SORT_REGULAR)]);
     }
 
     /**
