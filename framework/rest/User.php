@@ -22,6 +22,8 @@ use yii\helpers\StringHelper;
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
+ *
+ * @tbd aggiungere configurazione per permettere login senza identità
  */
 class User extends \yii\web\User
 {
@@ -116,8 +118,10 @@ class User extends \yii\web\User
      * @param string $username
      * @param string $password
      * @return IdentityInterface|null
+     *
+     * @tbd potrà restituire anche un UserInterface
      */
-    public function loginByCredentials(string $username, string $password): ?IdentityInterface
+    public function loginByCredentials(string $username, string $password): ?object
     {
         /** @var UserInterface $modelClass */
         $modelClass = $this->modelClass;
@@ -184,8 +188,10 @@ class User extends \yii\web\User
     /**
      * @param IdentityInterface $identity
      * @return bool
+     *
+     * @tbd rimetterlo private dopo la configurazione per login senza identità
      */
-    private function _login(IdentityInterface $identity): bool
+    protected function _login(IdentityInterface $identity): bool
     {
         if ($this->beforeLogin($identity, false, 0)) {
             $this->_identity = $identity;
