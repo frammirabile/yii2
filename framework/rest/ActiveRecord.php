@@ -83,7 +83,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
     public function init(): void
     {
         foreach ($this->dependencies() as $name => $config)
-            $this->_dependencies[$name] = new Dependency(is_array($config) ? $config : ['class' => $config]);
+            $this->_dependencies[$name] = new Dependency(array_merge(['primaryClass' => static::class], is_array($config) ? $config : ['class' => $config]));
 
         parent::init();
     }

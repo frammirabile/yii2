@@ -21,6 +21,11 @@ class Dependency extends Component
     /**
      * @var string
      */
+    public $primaryClass;
+
+    /**
+     * @var string
+     */
     public $class;
 
     /**
@@ -39,9 +44,9 @@ class Dependency extends Component
     public function init(): void
     {
         if ($this->foreignKey === null) {
-            /** @var ActiveRecord $modelClass */
-            $modelClass = \Yii::$app->controller->modelClass;
-            $this->foreignKey = $modelClass::foreignKey();
+            /** @var ActiveRecord $primaryClass */
+            $primaryClass = $this->primaryClass;
+            $this->foreignKey = $primaryClass::foreignKey();
         }
     }
 
