@@ -206,13 +206,10 @@ class ActiveUser extends ActiveRecord implements UserInterface
      */
     public function getIdentity(): ?IdentityInterface
     {
-        if ($this->identity_id === null)
-            return null;
-
         /** @var IdentityInterface $identityClass */
         $identityClass = \Yii::$app->user->identityClass;
 
-        return $identityClass::findById($this->identity_id);
+        return isset($identityClass, $this->identity_id) ? $identityClass::findById($this->identity_id) : null;
     }
 
     /**

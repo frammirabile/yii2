@@ -6,24 +6,23 @@
 
 namespace yii\rest;
 
-use yii\base\{InvalidConfigException, InvalidValueException};
-use yii\helpers\StringHelper;
+use yii\base\InvalidConfigException;
+use yii\db\ActiveRecord;
 
 /**
  * Rest user
  *
  * @property-read int $id
  * @property-read string $username
+ * @property-read bool $isAnonymous
  * @property-read IdentityInterface|null $identity
  * @property-read TokenInterface|null $token
  *
- * @method beforeLogin(IdentityInterface $identity, $cookieBased, $duration)
- * @method afterLogin(IdentityInterface $identity, $cookieBased, $duration)
+ * @method beforeLogin(UserInterface $user, $cookieBased, $duration)
+ * @method afterLogin(UserInterface $user, $cookieBased, $duration)
  *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
  * @since 1.0
- *
- * @tbd aggiungere configurazione per permettere login senza identità
  */
 class User extends \yii\web\User
 {
@@ -38,9 +37,19 @@ class User extends \yii\web\User
     public $tokenClass;
 
     /**
+     * @var string|null the class name of the [[identity]] object
+     */
+    public $identityClass;
+
+    /**
+     * @var bool whether to login without identity
+     */
+    public $loginWithoutIdentity = false;
+
+    /**
      * @var UserInterface
      */
-    protected $_this;
+    protected $_model;
 
     /**
      * @var IdentityInterface|null
@@ -63,11 +72,11 @@ class User extends \yii\web\User
         if (!in_array(UserInterface::class, class_implements($this->modelClass)))
             throw new InvalidConfigException(\Yii::t('yii', 'User class must implement UserInterface'));
 
-        if (!in_array(IdentityInterface::class, class_implements($this->identityClass)))
-            throw new InvalidConfigException(\Yii::t('yii', 'Identity class must implement IdentityInterface'));
-
         if (!in_array(TokenInterface::class, class_implements($this->tokenClass)))
             throw new InvalidConfigException(\Yii::t('yii', 'Token class must implement TokenInterface'));
+
+        if ($this->identityClass !== null && !in_array(IdentityInterface::class, class_implements($this->identityClass)))
+            throw new InvalidConfigException(\Yii::t('yii', 'Identity class must implement IdentityInterface'));
     }
 
     /**
@@ -83,7 +92,7 @@ class User extends \yii\web\User
      */
     public function __toString(): string
     {
-        return StringHelper::basename($this->identityClass).' '.$this->getId();
+        return 'User '.$this->getId();
     }
 
     /**
@@ -94,16 +103,25 @@ class User extends \yii\web\User
         /** @var ActiveRecord $identity */
         $identity = $this->_identity;
 
-        return parent::hasProperty($name) || $identity->hasProperty($name);
+        return parent::hasProperty($name) || !$this->getIsAnonymous() && $identity->hasProperty($name);
     }
 
     /**
      * {@inheritdoc}
-     * @return UserInterface|null
+     * @return UserInterface
      */
-    public function getIdentity($autoRenew = false): ?UserInterface
+    public function getModel(): UserInterface
     {
-        return $this->_this;
+        return $this->_model;
+    }
+
+    /**
+     * {@inheritdoc}
+     * @return IdentityInterface|null
+     */
+    public function getIdentity($autoRenew = false): ?IdentityInterface
+    {
+        return $this->_identity;
     }
 
     /**
@@ -111,32 +129,28 @@ class User extends \yii\web\User
      */
     public function getToken(): ?TokenInterface
     {
-        return $this->_this->getToken();
+        return $this->_model->getToken();
     }
 
     /**
      * @param string $username
      * @param string $password
-     * @return IdentityInterface|null
-     *
-     * @tbd potrà restituire anche un UserInterface
+     * @return UserInterface|null
      */
-    public function loginByCredentials(string $username, string $password): ?object
+    public function loginByCredentials(string $username, string $password): ?UserInterface
     {
         /** @var UserInterface $modelClass */
         $modelClass = $this->modelClass;
 
-        if (($this->_this = $modelClass::findByUsername($username)) === null || !$this->_this->validatePassword($password))
-            return null;
-
-        return ($identity = $this->_this->getIdentity()) !== null && $this->_login($identity) ? $identity : null;
+        return ($model = $modelClass::findByUsername($username)) !== null &&
+               $model->validatePassword($password) && $this->_login($model) ? $model : null;
     }
 
     /**
      * @param string $token
-     * @return IdentityInterface|null
+     * @return UserInterface|null
      */
-    public function loginByRefreshToken(string $token): ?IdentityInterface
+    public function loginByRefreshToken(string $token): ?UserInterface
     {
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
@@ -145,15 +159,14 @@ class User extends \yii\web\User
         $modelClass = $this->modelClass;
 
         return ($token = $tokenClass::findByRefresh($token)) !== null &&
-               ($this->_this = $modelClass::findById($token->getUserId())) !== null &&
-               ($identity = $this->_this->getIdentity()) !== null &&
-               $this->_login($identity) ? $identity : null;
+               ($model = $modelClass::findById($token->getUserId())) !== null &&
+               $this->_login($model) ? $model : null;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function loginByAccessToken($token, $type = null): ?IdentityInterface
+    public function loginByAccessToken($token, $type = null): ?UserInterface
     {
         /** @var TokenInterface $tokenClass */
         $tokenClass = $this->tokenClass;
@@ -162,9 +175,8 @@ class User extends \yii\web\User
         $modelClass = $this->modelClass;
 
         return ($token = $tokenClass::findByString($token)) !== null &&
-               ($this->_this = $modelClass::findById($token->getUserId())) !== null &&
-               ($identity = $this->_this->getIdentity()) !== null &&
-               $this->_login($identity) ? $identity : null;
+               ($model = $modelClass::findById($token->getUserId())) !== null &&
+               $this->_login($model) ? $model : null;
     }
 
     /**
@@ -172,7 +184,7 @@ class User extends \yii\web\User
      */
     public function getId(): int
     {
-        return $this->_this->getId();
+        return $this->_model->getId();
     }
 
     /**
@@ -182,21 +194,39 @@ class User extends \yii\web\User
      */
     public function getUsername(): ?string
     {
-        return $this->_this->getUsername();
+        return $this->_model->getUsername();
     }
 
     /**
-     * @param IdentityInterface $identity
      * @return bool
-     *
-     * @tbd rimetterlo private dopo la configurazione per login senza identità
      */
-    protected function _login(IdentityInterface $identity): bool
+    public function getIsAnonymous(): bool
     {
-        if ($this->beforeLogin($identity, false, 0)) {
-            $this->_identity = $identity;
-            \Yii::info($this->__toString().' logged in from '.\Yii::$app->request->getUserIP(), __METHOD__);
-            $this->afterLogin($identity, false, 0);
+        return !$this->getIsGuest() && $this->_identity === null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIsGuest(): bool
+    {
+        return $this->_model === null;
+    }
+
+    /**
+     * @param UserInterface $model
+     * @return bool
+     */
+    private function _login(UserInterface $model): bool
+    {
+        if ($this->beforeLogin($model, false, 0)) {
+            $this->_model = $model;
+
+            if (($this->_identity = $model->getIdentity()) === null && !$this->loginWithoutIdentity)
+                return false;
+
+            \Yii::info('User logged in from '.\Yii::$app->request->getUserIP(), __METHOD__);
+            $this->afterLogin($model, false, 0);
         }
 
         return !$this->getIsGuest();
