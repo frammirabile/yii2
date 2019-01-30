@@ -6,7 +6,7 @@
 
 namespace yii\rest;
 
-use yii\base\Component;
+use yii\base\{Component, InvalidConfigException};
 
 /**
  * Rest dependency
@@ -39,7 +39,13 @@ class Dependency extends Component
     public $collection = false;
 
     /**
+     * @var string|null
+     */
+    public $sort;
+
+    /**
      * @return void
+     * @throws InvalidConfigException
      */
     public function init(): void
     {
@@ -47,6 +53,14 @@ class Dependency extends Component
             /** @var ActiveRecord $primaryClass */
             $primaryClass = $this->primaryClass;
             $this->foreignKey = $primaryClass::foreignKey();
+        }
+
+        if ($this->sort !== null) {
+            /** @var ActiveRecord $class */
+            $class = $this->class;
+
+            if ($class::getTableSchema()->getColumn($this->sort) === null)
+                throw new InvalidConfigException('Dependency '.$class::name()." cannot be sorted by $this->sort");
         }
     }
 
