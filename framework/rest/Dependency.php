@@ -39,7 +39,7 @@ class Dependency extends Component
     public $collection = false;
 
     /**
-     * @var string|null
+     * @var int[]
      */
     public $sort;
 
@@ -55,12 +55,12 @@ class Dependency extends Component
             $this->foreignKey = $primaryClass::foreignKey();
         }
 
-        if ($this->sort !== null) {
+        if (!empty($this->sort)) {
             /** @var ActiveRecord $class */
             $class = $this->class;
 
-            if ($class::getTableSchema()->getColumn($this->sort) === null)
-                throw new InvalidConfigException('Dependency '.$class::name()." cannot be sorted by $this->sort");
+            if (!empty($diff = array_diff(array_keys($this->sort), $class::getTableSchema()->getColumnNames())))
+                throw new InvalidConfigException('Dependency '.$class::name().' cannot be sorted by '.implode(', ', $diff));
         }
     }
 

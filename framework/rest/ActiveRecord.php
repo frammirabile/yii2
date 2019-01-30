@@ -98,7 +98,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
 
         $dependency = $this->_dependencies[$name];
 
-        return $this->_related[$name] ?? ($this->isNewRecord ? null : ($this->_related[$name] = ($this->{'has'.($dependency->isCollection ? 'Many' : 'One')}($dependency->class, [$dependency->foreignKey => 'id'])->orderBy([]))->{$dependency->isCollection ? 'all' : 'one'}())); #tbd sistemare orderBy()
+        return $this->_related[$name] ?? ($this->isNewRecord ? null : ($this->_related[$name] = ($this->{'has'.($dependency->isCollection ? 'Many' : 'One')}($dependency->class, [$dependency->foreignKey => 'id'])->orderBy($dependency->sort))->{$dependency->isCollection ? 'all' : 'one'}()));
     }
 
     /**
