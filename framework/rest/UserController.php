@@ -68,7 +68,7 @@ class UserController extends ActiveController
      */
     public function actionViewMy(string $property)
     {
-        return \Yii::$app->user->hasProperty($property) ? \Yii::$app->user->$property : $this->{__METHOD__.ucfirst($property)}();
+        return \Yii::$app->user->hasProperty($property) ? \Yii::$app->user->$property : $this->{__FUNCTION__.ucfirst($property)}();
     }
 
     /**
