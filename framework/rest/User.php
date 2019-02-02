@@ -225,7 +225,7 @@ class User extends \yii\web\User
             if (($this->_identity = $model->getIdentity()) === null && !$this->loginWithoutIdentity)
                 return false;
 
-            \Yii::info('User logged in from '.\Yii::$app->request->getUserIP(), __METHOD__);
+            \Yii::info('User '.$this->getId().' logged in from '.\Yii::$app->request->getUserIP(), __METHOD__);
             $this->afterLogin($model, false, 0);
         }
 
