@@ -55,6 +55,16 @@ class FormatConverter extends BaseFormatConverter
 
     /**
      * @param string $value
+     * @return string
+     * @throws InvalidConfigException
+     */
+    public static function asYear(string $value): string
+    {
+        return \Yii::$app->formatter->asDate($value, 'Y');
+    }
+
+    /**
+     * @param string $value
      * @return int
      */
     public static function asSeconds(string $value): int
