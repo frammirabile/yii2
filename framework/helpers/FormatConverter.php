@@ -10,19 +10,25 @@ namespace yii\helpers;
 use yii\base\InvalidConfigException;
 
 /**
- * FormatConverter provides functionality to convert between different formatting pattern formats.
- *
- * It provides functions to convert date format patterns between different conventions.
+ * FormatConverter provides functionality to convert between different formatting pattern formats
  *
  * @author Carsten Brandt <mail@cebe.cc>
  * @author Enrica Ruedin <e.ruedin@guggach.com>
- * @since 2.0
- *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
- * @since 1.0
+ * @since 2.0
  */
 class FormatConverter extends BaseFormatConverter
 {
+    /**
+     * @param string $value
+     * @return string
+     * @throws InvalidConfigException
+     */
+    public static function asCurrency(string $value): string
+    {
+        return \Yii::$app->formatter->asCurrency($value);
+    }
+
     /**
      * @param string $value
      * @return string
@@ -45,6 +51,15 @@ class FormatConverter extends BaseFormatConverter
 
     /**
      * @param string $value
+     * @return int
+     */
+    public static function asSeconds(string $value): int
+    {
+        return strtotime('+'.$value) - time();
+    }
+
+    /**
+     * @param string $value
      * @return string
      * @throws InvalidConfigException
      */
@@ -61,24 +76,5 @@ class FormatConverter extends BaseFormatConverter
     public static function asYear(string $value): string
     {
         return \Yii::$app->formatter->asDate($value, 'Y');
-    }
-
-    /**
-     * @param string $value
-     * @return int
-     */
-    public static function asSeconds(string $value): int
-    {
-        return strtotime('+'.$value) - time();
-    }
-
-    /**
-     * @param string $value
-     * @return string
-     * @throws InvalidConfigException
-     */
-    public static function asCurrency(string $value): string
-    {
-        return \Yii::$app->formatter->asCurrency($value);
     }
 }
