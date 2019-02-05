@@ -30,21 +30,21 @@ class FormatConverter extends BaseFormatConverter
     }
 
     /**
-     * @param string $value
+     * @param int|string|\DateTime $value
      * @return string
      * @throws InvalidConfigException
      */
-    public static function asDate(string $value): string
+    public static function asDate($value): string
     {
         return \Yii::$app->formatter->asDate($value);
     }
 
     /**
-     * @param string $value
+     * @param int|string|\DateTime $value
      * @return string
      * @throws InvalidConfigException
      */
-    public static function asDateTime(string $value): string
+    public static function asDateTime($value): string
     {
         return \Yii::$app->formatter->asDateTime($value);
     }
@@ -59,21 +59,21 @@ class FormatConverter extends BaseFormatConverter
     }
 
     /**
-     * @param string $value
+     * @param int|string|\DateTime $value
      * @return string
      * @throws InvalidConfigException
      */
-    public static function asTime(string $value): string
+    public static function asTime($value): string
     {
         return \Yii::$app->formatter->asTime($value);
     }
 
     /**
-     * @param string $value
+     * @param int|string|\DateTime $value
      * @return string
      * @throws InvalidConfigException
      */
-    public static function asYear(string $value): string
+    public static function asYear($value): string
     {
         return \Yii::$app->formatter->asDate($value, 'Y');
     }

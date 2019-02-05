@@ -17,23 +17,24 @@ use yii\base\InvalidConfigException;
 class DateHelper
 {
     /**
-     * @param string $interval
+     * @param int $interval
+     * @param string $unity
      * @param string $date
      * @param string $format
      * @return string
      * @throws \Exception
      */
-    public static function add(string $interval, string $date = 'now', string $format = 'date'): string
+    public static function add(int $interval, string $unity, string $date = 'now', string $format = 'date'): string
     {
-        return static::format((new \DateTime($date))->add(new \DateInterval("P$interval")), $format);
+        return static::format((new \DateTime($date))->add(new \DateInterval("P$interval$unity")), $format);
     }
 
     /**
-     * @param string $time
+     * @param int|string|\DateTime $time
      * @param string $format
      * @return string
      */
-    public static function format(string $time, string $format = 'date'): string
+    public static function format($time, string $format = 'date'): string
     {
         return FormatConverter::{'as'.ucfirst($format)}($time);
     }
