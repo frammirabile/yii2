@@ -105,6 +105,8 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
      * {@inheritdoc}
      *
      * @return void
+     *
+     * @tbd aggiornamento delle dipendenze
      */
     public function __set($name, $value): void
     {
