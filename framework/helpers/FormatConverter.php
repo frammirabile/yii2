@@ -48,6 +48,15 @@ class FormatConverter extends BaseFormatConverter
     {
         return \Yii::$app->formatter->asDateTime($value);
     }
+    /**
+     * @param mixed $value
+     * @param int $decimals
+     * @return string
+     */
+    public static function asDecimal($value, int $decimals = 2): string
+    {
+        return \Yii::$app->formatter->asDecimal($value, $decimals);
+    }
 
     /**
      * @param string $value
