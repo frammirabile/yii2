@@ -17,10 +17,8 @@ use yii\helpers\{Console, FileHelper};
  * BaseMigrateController is the base class for migrate controllers.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
- * @since 1.0
+ * @since 2.0
  */
 abstract class BaseMigrateController extends Controller
 {
@@ -703,12 +701,12 @@ abstract class BaseMigrateController extends Controller
     /**
      * Finds the file path for the specified migration namespace
      *
-     * @param string|null $namespace migration namespace
+     * @param null|string $namespace migration namespace
      * @return string migration file path
      * @throws ConsoleException on failure
      * @since 2.0.10
      */
-    private function findMigrationPath(?string $namespace): string
+    private function findMigrationPath(string $namespace = null): string
     {
         if (empty($namespace)) {
             return is_array($this->migrationPath) ? reset($this->migrationPath) : $this->migrationPath;
@@ -1003,10 +1001,10 @@ abstract class BaseMigrateController extends Controller
     /**
      * Returns the migration history
      *
-     * @param int|null $limit the maximum number of records in the history to be returned. `null` for "no limit".
+     * @param null|int $limit the maximum number of records in the history to be returned. `null` for "no limit".
      * @return array the migration history
      */
-    abstract protected function getMigrationHistory(?int $limit): array;
+    abstract protected function getMigrationHistory(int $limit = null): array;
 
     /**
      * Adds new migration entry to the history

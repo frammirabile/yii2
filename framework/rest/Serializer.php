@@ -294,7 +294,7 @@ class Serializer extends Component
         if ($this->request->getIsHead())
             return null;
 
-        list($fields, $expand) = $this->getRequestedFields();
+        [$fields, $expand] = $this->getRequestedFields();
 
         return $model->toArray($fields, array_merge($expand, array_keys($model->getRelatedRecords())));
     }
@@ -327,7 +327,8 @@ class Serializer extends Component
      */
     protected function serializeModels(array $models): array
     {
-        list($fields, $expand) = $this->getRequestedFields();
+        [$fields, $expand] = $this->getRequestedFields();
+
         foreach ($models as $i => $model) {
             if ($model instanceof Arrayable) {
                 $models[$i] = $model->toArray($fields, $expand);

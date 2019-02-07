@@ -221,7 +221,7 @@ class MigrateController extends BaseMigrateController
      * {@inheritdoc}
      * @throws DbException
      */
-    protected function getMigrationHistory(?int $limit): array
+    protected function getMigrationHistory(int $limit = null): array
     {
         if ($this->db->schema->getTableSchema($this->migrationTable, true) === null) {
             $this->createMigrationHistoryTable();

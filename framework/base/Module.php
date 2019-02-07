@@ -202,11 +202,11 @@ class Module extends ServiceLocator
     /**
      * Sets the currently requested instance of this module class
      *
-     * @param Module|null $instance the currently requested instance of this module class.
+     * @param null|Module $instance the currently requested instance of this module class.
      * If it is `null`, the instance of the calling class will be removed, if any.
      * @return void
      */
-    public static function setInstance(?Module $instance): void
+    public static function setInstance(Module $instance = null): void
     {
         if ($instance === null) {
             unset(Yii::$app->loadedModules[get_called_class()]);
@@ -475,7 +475,7 @@ class Module extends ServiceLocator
      * @throws InvalidConfigException
      * @see hasModule()
      */
-    public function getModule(string $id, bool$load = true): ?Module
+    public function getModule(string $id, bool $load = true): ?Module
     {
         if (($pos = strpos($id, '/')) !== false) {
             // sub-module

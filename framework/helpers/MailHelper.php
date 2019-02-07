@@ -33,7 +33,7 @@ class MailHelper
      * @throws InvalidConfigException
      * @throws ServerErrorHttpException
      */
-    public static function sendHtmlMail(string $view, string $subject, string $from, string $to, array $params = [], ?string $error = null): void
+    public static function sendHtmlMail(string $view, string $subject, string $from, string $to, array $params = [], string $error = null): void
     {
         if (strpos($from, '@') === false)
             $from .= '@'.Url::domain();

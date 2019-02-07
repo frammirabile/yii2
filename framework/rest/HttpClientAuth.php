@@ -28,7 +28,7 @@ class HttpClientAuth extends HttpBasicAuth
      */
     public function authenticate($user, $request, $response): ?bool
     {
-        list($id, $secret) = $request->getAuthCredentials();
+        [$id, $secret] = $request->getAuthCredentials();
 
         if (($client = Client::findOne(['id' => $id, 'secret' => $secret])) === null) {
             $this->handleFailure($response);

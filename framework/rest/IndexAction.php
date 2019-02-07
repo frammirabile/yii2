@@ -99,32 +99,33 @@ class IndexAction extends Action
     {
         parent::init();
 
-        if (in_array(Filterable::class, class_implements($this->modelClass))) {
-            /** @var Filterable $modelClass */
-            $modelClass = $this->modelClass;
-            $filters = $modelClass::filters();
+        if (!in_array(Filterable::class, class_implements($this->modelClass)))
+            return;
 
-            $this->dataFilter = [
-                'class' => ActiveDataFilter::class,
-                'searchModel' => function() use($filters) {
-                    $searchModel = new DynamicModel(array_keys($filters));
+        /** @var Filterable $modelClass */
+        $modelClass = $this->modelClass;
+        $filters = $modelClass::filters();
 
-                    foreach ($filters as $attribute => $validators)
-                        foreach ((array) $validators as $validator)
-                            if ($validator == 'boolean')
-                                $searchModel->addRule($attribute, 'filter', ['filter' => function($value) {
-                                    return strlen($value) == 0 || filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                                }]);
-                            elseif (is_string($validator))
-                                $searchModel->addRule($attribute, $validator);
-                            elseif (is_array($validator))
-                                $searchModel->addRule($attribute, reset($validator), array_slice($validator, 1));
+        $this->dataFilter = [
+            'class' => ActiveDataFilter::class,
+            'searchModel' => function() use($filters) {
+                $searchModel = new DynamicModel(array_keys($filters));
 
-                    return $searchModel;
-                },
-                'attributeMap' => $this->underscoreFilters ? array_combine($filters = array_keys($filters), ArrayHelper::underscoreValues($filters)) : []
-            ];
-        }
+                foreach ($filters as $attribute => $validators)
+                    foreach ((array) $validators as $validator)
+                        if ($validator == 'boolean')
+                            $searchModel->addRule($attribute, 'filter', ['filter' => function($value) {
+                                return strlen($value) == 0 || filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                            }]);
+                        elseif (is_string($validator))
+                            $searchModel->addRule($attribute, $validator);
+                        elseif (is_array($validator))
+                            $searchModel->addRule($attribute, reset($validator), array_slice($validator, 1));
+
+                return $searchModel;
+            },
+            'attributeMap' => $this->underscoreFilters ? array_combine($filters = array_keys($filters), ArrayHelper::underscoreValues($filters)) : []
+        ];
     }
 
     /**

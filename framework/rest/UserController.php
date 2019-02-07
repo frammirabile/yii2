@@ -46,7 +46,7 @@ class UserController extends ActiveController
      */
     public function actionUpdateMe(): IdentityInterface
     {
-        return $this->actionUpdateMy(null);
+        return $this->actionUpdateMy();
     }
 
     /**
@@ -72,7 +72,7 @@ class UserController extends ActiveController
     }
 
     /**
-     * @param string|null $property
+     * @param null|string $property
      * @param null|mixed $value
      * @return IdentityInterface
      * @throws Exception
@@ -80,7 +80,7 @@ class UserController extends ActiveController
      * @throws NotFoundHttpException
      * @throws ServerErrorHttpException
      */
-    public function actionUpdateMy(?string $property, $value = null): IdentityInterface
+    public function actionUpdateMy(string $property = null, $value = null): IdentityInterface
     {
         /** @var UpdateAction $action */
         $action = $this->createAction('update');

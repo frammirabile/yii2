@@ -159,5 +159,5 @@ abstract class ActiveController extends Controller
      * @param array $params additional parameters
      * @return void
      */
-    public function checkAccess(string $action, ?object $model = null, array $params = []): void {}
+    public function checkAccess(string $action, object $model = null, array $params = []): void {}
 }

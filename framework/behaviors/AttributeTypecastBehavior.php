@@ -241,7 +241,7 @@ class AttributeTypecastBehavior extends Behavior
      * @param null|callable $callback callback for type-casting attributes
      * @return void
      */
-    public function typecastAttributes(?array $attributeNames = null, ?callable $callback = null): void
+    public function typecastAttributes(array $attributeNames = null, callable $callback = null): void
     {
         $attributeTypes = [];
 

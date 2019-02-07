@@ -41,10 +41,8 @@ use yii\helpers\{Inflector, StringHelper};
  * For more details and usage information on Migration, see the [guide article on Migration](guide:db-migrations).
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
- * @since 1.0
+ * @since 2.0
  */
 class Migration extends Component implements MigrationInterface
 {
@@ -379,7 +377,7 @@ class Migration extends Component implements MigrationInterface
      * @return void
      * @throws Exception
      */
-    public function createTable(string $table, array $columns, ?string $options = null): void
+    public function createTable(string $table, array $columns, string $options = null): void
     {
         $time = $this->beginCommand("create table $table");
         $this->db->createCommand()->createTable($table, $columns, $options)->execute();
@@ -553,7 +551,7 @@ class Migration extends Component implements MigrationInterface
      * @return void
      * @throws Exception
      */
-    public function addForeignKey(string $name, string $table, $columns, string $refTable, $refColumns, ?string $delete = null, ?string $update = null): void
+    public function addForeignKey(string $name, string $table, $columns, string $refTable, $refColumns, string $delete = null, string $update = null): void
     {
         $time = $this->beginCommand("add foreign key $name: $table (" . implode(',', (array) $columns) . ") references $refTable (" . implode(',', (array) $refColumns) . ')');
         $this->db->createCommand()->addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete, $update)->execute();

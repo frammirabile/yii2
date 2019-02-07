@@ -28,10 +28,8 @@ use yii\helpers\StringHelper;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @author Tom Worster <fsb@thefsb.org>
  * @author Klimov Paul <klimov.paul@gmail.com>
- * @since 2.0
- *
  * @author Francesco Ammirabile <frammirabile@gmail.com>
- * @since 1.0
+ * @since 2.0
  */
 class Security extends Component
 {
@@ -142,7 +140,7 @@ class Security extends Component
      * @see decryptByKey()
      * @see encryptByPassword()
      */
-    public function encryptByKey(string $data, string $inputKey, ?string $info = null): string
+    public function encryptByKey(string $data, string $inputKey, string $info = null): string
     {
         return $this->encrypt($data, false, $inputKey, $info);
     }
@@ -173,7 +171,7 @@ class Security extends Component
      * @throws InvalidConfigException
      * @see encryptByKey()
      */
-    public function decryptByKey(string $data, string $inputKey, ?string $info = null)
+    public function decryptByKey(string $data, string $inputKey, string $info = null)
     {
         return $this->decrypt($data, false, $inputKey, $info);
     }
@@ -184,14 +182,14 @@ class Security extends Component
      * @param string $data data to be encrypted
      * @param bool $passwordBased set true to use password-based key derivation
      * @param string $secret the encryption password or key
-     * @param string|null $info context/application specific information, e.g. a user ID
+     * @param null|string $info context/application specific information, e.g. a user ID
      * See [RFC 5869 Section 3.2](https://tools.ietf.org/html/rfc5869#section-3.2) for more details.
      * @return string the encrypted data
      * @throws InvalidConfigException on OpenSSL not loaded
      * @throws \Exception on OpenSSL error
      * @see decrypt()
      */
-    protected function encrypt(string $data, bool $passwordBased, string $secret, ?string $info): string
+    protected function encrypt(string $data, bool $passwordBased, string $secret, string $info = null): string
     {
         if (!extension_loaded('openssl')) {
             throw new InvalidConfigException('Encryption requires the OpenSSL PHP extension');
@@ -228,13 +226,13 @@ class Security extends Component
      * @param string $data encrypted data to be decrypted
      * @param bool $passwordBased set true to use password-based key derivation
      * @param string $secret the decryption password or key
-     * @param string|null $info context/application specific information, @see encrypt()
+     * @param null|string $info context/application specific information, @see encrypt()
      * @return bool|string the decrypted data or false on authentication failure
      * @throws InvalidConfigException on OpenSSL not loaded
      * @throws Exception on OpenSSL error
      * @see encrypt()
      */
-    protected function decrypt(string $data, bool $passwordBased, string $secret, ?string $info)
+    protected function decrypt(string $data, bool $passwordBased, string $secret, string $info = null)
     {
         if (!extension_loaded('openssl')) {
             throw new InvalidConfigException('Encryption requires the OpenSSL PHP extension');
@@ -279,7 +277,7 @@ class Security extends Component
      * @return string the derived key
      * @throws InvalidArgumentException when HMAC generation fails
      */
-    public function hkdf(string $algo, string $inputKey, ?string $salt = null, ?string $info = null, int $length = 0): string
+    public function hkdf(string $algo, string $inputKey, string $salt = null, string $info = null, int $length = 0): string
     {
         if (function_exists('hash_hkdf')) {
             $outputKey = hash_hkdf($algo, $inputKey, $length, $info, $salt);
@@ -604,7 +602,7 @@ class Security extends Component
      * @throws \Exception on bad password parameter or cost parameter
      * @see validatePassword()
      */
-    public function generatePasswordHash(string $password, ?int $cost = null): string
+    public function generatePasswordHash(string $password, int $cost = null): string
     {
         if ($cost === null) {
             $cost = $this->passwordHashCost;

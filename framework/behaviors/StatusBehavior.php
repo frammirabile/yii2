@@ -106,7 +106,7 @@ class StatusBehavior extends Behavior
      * @return int|false
      * @throws InvalidConfigException
      */
-    public function getStatus(?string $text = null)
+    public function getStatus(string $text = null)
     {
         if ($text === null) {
             if (!$this->owner->hasProperty($this->attribute))
@@ -124,7 +124,7 @@ class StatusBehavior extends Behavior
      * @return string|false
      * @throws InvalidConfigException
      */
-    public function getStatusText(?int $id = null)
+    public function getStatusText(int $id = null)
     {
         if ($id === null)
             $id = $this->getStatus();

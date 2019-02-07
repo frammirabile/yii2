@@ -791,7 +791,7 @@ abstract class Application extends Module
      * @throws ExitException if the application is in testing mode
      * @throws InvalidConfigException
      */
-    public function end(int $status = 0, ?Response $response = null): void
+    public function end(int $status = 0, Response $response = null): void
     {
         if ($this->state === self::STATE_BEFORE_REQUEST || $this->state === self::STATE_HANDLING_REQUEST) {
             $this->state = self::STATE_AFTER_REQUEST;
