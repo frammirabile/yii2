@@ -55,7 +55,7 @@ class FormatConverter extends BaseFormatConverter
      */
     public static function asDecimal($value, int $decimals = 2): string
     {
-        return \Yii::$app->formatter->asDecimal($value, $decimals);
+        return \Yii::$app->formatter->asDecimal($value ?? 0, $decimals);
     }
 
     /**
