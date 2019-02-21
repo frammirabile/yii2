@@ -240,7 +240,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
                     $dependencies = [$dependencies];
 
                 foreach ($dependencies as $model) {
-                    $model->setAttribute($dependency->foreignKey, $this->primaryKey);
+                    $model->setAttributes(array_combine((array) $dependency->foreignKey, array_values($this->getPrimaryKey(true))));
                     $model->save();
                 }
             }
