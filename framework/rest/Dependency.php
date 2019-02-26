@@ -39,6 +39,11 @@ class Dependency extends Component
     public $collection = false;
 
     /**
+     * @var array
+     */
+    public $filter;
+
+    /**
      * @var int[]
      */
     public $sort;
