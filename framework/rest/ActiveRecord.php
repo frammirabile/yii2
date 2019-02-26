@@ -119,7 +119,9 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
                 $this->_related[$name] = $value;
             elseif ($dependency->isCollection)
                 $this->_related[$name] = array_map(function($data) use($dependency) {
-                    $dependency = new $dependency->class(['scenario' => static::SCENARIO_CREATE]);
+                    /** @var static $dependency */
+                    $dependency = new $dependency->class;
+                    $dependency->scenario = static::SCENARIO_CREATE;
                     $dependency->setAttributes($data);
 
                     return $dependency;
